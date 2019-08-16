@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html>
+
+
+  <head>
+    <link rel="stylesheet" href="style.css">
+  </head>
+
+
+  <body>
+    
+    <!--class not button. style button width-->
+    <div id="topDiv">
+      <button id="testModeButton">Enter<br>Test Mode</button>
+      <button id="shuffleSectionsButton">Shuffle<br>Sections</button>
+      <button id="shuffleQuestionsButton">Shuffle<br>Questions</button>
+      <button id="shuffleAnswersButton">Shuffle<br>Answers</button>
+    </div>
+    
+    <div id="middleDiv">
+    <textarea id="inputMCQ" rows="30"></textarea> 
+
+
+    <table id="parsedMCQ">
+      <tr>
+        <th style="width:5ch;">label</th>
+        <th>text</th>
+        <th style="width:4ch;">key</th>
+        <th style="width:4ch;">lock</th>
+      </tr>
+    </table>
+    
+    </div>
+    
+    <div id="bottomDiv">
+      
+    <div id="inputAK_Div">
+      <textarea id="inputAK" rows="30"></textarea>
+    </div>
+    
+    <div id="parsedAK_Div">
+    <table id="parsedAK">
+      <tr>
+        <th style="width:4ch">Q</th>
+        <th style="width:4ch">A</th>
+      </tr>
+    </table>
+    </div>
+    <div id="outputMCQ_Div">
+      <p id="outputMCQ">
+        test<br>
+        test<br>
+        test<br>
+      </p>
+    </div>
+    </div>
+    
+
+
+    
+  <script src="script.js"></script>
+  </body>
+
+
+</html>

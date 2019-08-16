@@ -1,0 +1,129 @@
+﻿table {
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+
+table, tr, th, td {
+    border: 1px solid black;
+}
+
+
+tr{
+  height: 1em;
+}
+
+
+td{
+  width: 100px;
+  white-space: nowrap;
+  overflow: scroll;
+}
+
+
+.emptyLine{
+  background-color: DarkGray;
+}
+
+
+.question {
+  background-color: LightGoldenRodYellow;
+}
+
+
+.answer {
+  background-color: Azure;
+}
+
+
+.section{
+  background-color: HoneyDew;
+}
+
+
+.error{
+  border:5px solid red;
+}
+
+
+.tableCellDiv{
+  max-height: 3em;
+}
+
+
+#topDiv{
+  /*shuffle buttons*/
+  position: fixed;
+  z-index: 9;
+  width: 95%;/*TODO why do other divs not need width*/
+  text-align: center;
+  border: 3px solid black;
+  background-color: white;
+}
+
+
+#middleDiv{
+  /*inputMCQ textarea and parsedMCQ table*/
+  position: relative;
+  top: 50px;
+  border: 3px solid black;
+  height: 50%;/*doesn't work*/
+  min-height: 100px;
+  overflow: scroll;
+}
+
+
+#bottomDiv{
+  /*inputAK textarea, parsedAK table, outputMCQ text*/
+  position: relative;
+  top: 50px;
+  border: 3px solid black;
+  max-height: 400px;
+  overflow: scroll;
+}
+
+
+#inputMCQ{
+  /*textarea*/
+  /*position: absolute;*/
+  float: left;
+  width: 30%;
+}
+
+
+#parsedMCQ{
+  /*table*/
+  position: relative;
+  left: 20px;
+  width: 50%;
+}
+
+
+#inputAK_Div{
+  float: left;
+  width: 15%;
+}
+
+
+#inputAK{
+  width: 100%;
+  padding: 0px;
+}
+
+
+#parsedAK_Div{
+  float: left;
+  width: 15%;
+}
+
+
+#parsedAK{
+  width: 100%;
+  padding: 0px;
+}
+
+
+#outputMCQ_Div{
+  float: left;
+  width: 60%;
+}
