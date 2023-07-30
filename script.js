@@ -2,7 +2,7 @@
 
 //used to clear parsedMCQ
 let parsedMCQ_Header = '<table id="parsedMCQ" style="min-width:18ch;">'+
-                            '<tr>'+
+                            '<tr id="0">'+
                                 '<th style="width:5ch">label</th>'+
                                 '<th>text</th>'+
                                 '<th style="width:4ch">key</th>'+
@@ -39,135 +39,113 @@ afterAnswerLetter.onblur = createOutput;
 
 //PART 1: FUNCTIONS FOR PARSING THE MCQ INPUT
 
+let rowId = 0; //used for debugging only
+let previousRow; //not counting empty lines
+
 /*called by inputMCQ.onblur
 user enters multiple choice questions (MCQs) in the inputMCQ textarea.
 parseMCQ parses the user input and fills out the parsedMCQ table
 */
 function parseMCQ ()
 {
-    //first line must be a section header, last line must be empty, so that all text blocks follow the same format
+    //reset
     parsedMCQ.outerHTML = parsedMCQ_Header;
+    previousRow = undefined;
+    rowId = 0;
 
-    let userInput = inputMCQ.value.trim() + '\n';
+    const userInput = inputMCQ.value.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
 
-    userInput = userInput.replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
+    const blocks = userInput.split(/\n\s*\n/); //split by empty line
+    blocks.forEach(parseBlock);
 
-
-    let linesArray = userInput.split('\n'); //split userInput by line
-
-    //create an empty first row. All sections have an empty row before them, so first section should too, to simplify validateParsedMCQ ()
-    let previousRow;
-    let rowId = 0;
-
-    linesArray.forEach(function(line, index, array) //classify each line as section, question, answer, or emptyLine, then pass it to createRow()
-    {
-        let previousLine = array[index-1] || "";
-        let firstWord = parseFirstWord(line); //firstWord can be A, B, C, D, E, 1/2/3-digit number, 'emptyLine', or 'other'
-        let previousFirstWord = parseFirstWord(previousLine);
-        let text = line;
-        rowId += index+1;//*0th row is preset by parsedMCQ_Header. row.id used for debugging only
-
-        if (typeof(firstWord)=="number" && previousFirstWord=="emptyLine") //if line is a question:
-        {
-            //second row must be a section header, otherwise splitParsedMCQIntoSections() breaks
-            if (index==0)
-            {
-                previousRow = createRow("section", "S", "", 1);
-                previousRow = createRow("emptyLine", "", "", 2);
-                rowId = 2;
-            }
-            text = line.trim().split(/\s/).slice(1).join(' ');//remove question number
-            previousRow = createRow("question", firstWord, text, rowId);
-        } else if ((firstWord=="A" && typeof(previousFirstWord)=="number")|| //else if line is an answer:
-            (firstWord=="B" && previousFirstWord=="A")||
-            (firstWord=="C" && previousFirstWord=="B")||
-            (firstWord=="D" && previousFirstWord=="C")||
-            (firstWord=="E" && previousFirstWord=="D"))
-        {
-            text = line.trim().split(/\s/).slice(1).join(' ');//remove answer letter label
-            previousRow = createRow("answer", firstWord, text, rowId);
-        }
-        else if (firstWord=="emptyLine") //else if line is empty:  
-        { 
-            if (previousFirstWord=="emptyLine")
-            {
-                //do nothing. Turn multiple empty lines into one empty row
-            }
-            else
-            {
-                previousRow = createRow("emptyLine", "", "", rowId);
-            }
-        }
-        else //because the line is not a question, answer, or empty, it must be part a section header
-        {
-            if (!previousRow || !previousRow.classList.contains("section"))//if line is 1st line of a section. !previousRow needs to go first in the OR expression, otherwise previousRow.classList.contains() returns an error when previousRow==undefined
-            {
-                previousRow = createRow("section", "S", text, rowId);
-            }
-            else //because line is not the 1st line of a section, don't create a new row. instead, add to previous row.
-            {
-                previousRow.children[1].children[0].innerHTML += "<br />" + line;
-            }
-        }
-    })
     validateParsedMCQ();
     createOutput();
 }
 
-/*Called by parseMCQ ()
-Parses one line from the inputMCQ textarea. Returns:
-'emptyLine' for empty lines,
-A, B, C, D or E for answer lines,
-[number] for question lines
-*/
-function parseFirstWord (line)
+function parseBlock(block, index)
 {
-    //remove all invisible characters, so line that looks empty is actually empty
-    let lineWithNoWhitespace = line.replace(/\s/g,"");
-    if (lineWithNoWhitespace.length==0) return "emptyLine";
-
-    let firstWord = line.trim().split(/\s/)[0]; //regex for whitespace characters
-
-    firstWord = firstWord.replace(/[\)\(\.]/g, ""); //turn (10) and B. into 10 and B
-
-    if (firstWord.length == 1 && firstWord.match(/[abcde]/i)) //if line starts with A,B,C,D,E, return answer letter (probably an answer line, but insertIntoTableByLine will double-check)
+    if (isNum(getLabel(block))) //question block
     {
-        return firstWord.toUpperCase();
+        if (index==0) //second row must be a section header, otherwise splitParsedMCQIntoSections() breaks
+        {
+            previousRow = createRow('S', '');
+            createRow('', '');
+        }
+
+        parseQuestionBlock(block);
+        createRow('', '');
     }
-    else if (firstWord.length <= 3 && firstWord.match(/^[0-9]+$/g)) //if line starts with a 1-2-or-3-digit number, return question number (probably a question line, but InsertIntoTableByLine will double-check)
-    { 
-        return +firstWord;
-    }
-    else
+    else //section header block
     {
-        return "other"; //Just in case. This return will not be used by another function.
+        if (index>0 && previousRow.className == 'section') //merge consecutive section header blocks into one section header
+        {
+            previousRow.children[1].children[0].innerHTML += "<br><br>" + block;
+        }
+        else
+        {
+            previousRow = createRow('S', block);
+            createRow('', '');
+        }
     }
 }
 
-/*Called by parseMCQ ()
-convert line into a table row and append it to parsedMCQ table
-*/
-function createRow(class_Name, label, text, rowId)
+function getLabel (text)
 {
-    let row = document.createElement('tr');
-    let labelTd = document.createElement('td');
-    let textTd = document.createElement('td');
-    let textDiv = document.createElement('div'); //need div because can't style height of td
-    let keyTd = document.createElement('td');
-    let lockTd = document.createElement('td');
+    const label = splitOffLabel(text).replace(/[\)\(\.]/g, ''); //turn (10) and B. into 10 and B
+    if (isNum(label)) return +label; //if text starts with a 1-2-or-3-digit number, return question number
+    if (isABCDE(label)) return label.toUpperCase(); //if text starts with A/B/C/D/E, return answer letter
+    return false;
+}
 
-    row.className = class_Name;
+//split question block into question and answers, pass to createRow()
+function parseQuestionBlock(block)
+{
+    const questionAndAnswers = block.trim().split(/\n(?=[\s\)\(\.]*[abcde][\s\)\(\.]*\s)/i); //split by newline followed by answer label
+
+    questionAndAnswers.forEach(function(q_or_a){        
+        previousRow = createRow
+        (
+            getLabel(q_or_a),
+            splitOffLabel(q_or_a, true) //remove label
+        )
+    })
+}
+
+function splitOffLabel (text, returnRemainder=false)
+{
+    const [label, remainder] = text.trim().split(/\s(.+)/s);
+    if (returnRemainder) return remainder;
+    return label;
+}
+
+//convert to table row, append to parsedMCQ table
+function createRow(label, text)
+{
+    const row = document.createElement('tr');
+    const labelTd = document.createElement('td');
+    const textTd = document.createElement('td');
+    const textDiv = document.createElement('div'); //need div because can't style height of td
+    const keyTd = document.createElement('td');
+    const lockTd = document.createElement('td');
+
+    if (label==='S') row.className = 'section';
+    if (label==='') row.className = 'emptyLine';
+    if (isNum(label)) row.className = 'question';
+    if (isABCDE(label)) row.className = 'answer';
+
+    rowId++;
     row.id = rowId;
-    textDiv.className = "tableCellDiv";
-    textDiv.innerHTML = text;
+    textDiv.className = 'tableCellDiv';
+    textDiv.innerHTML = text.replace(/\n/g, "<br>");
     textTd.append(textDiv);
     labelTd.textContent = label;
-    if (class_Name == "answer")
+
+    if (row.className == 'answer')
     {
         keyTd.insertAdjacentHTML("afterbegin",'<input type="checkbox" onclick=createOutput() name="key'+rowId+'"><br>');
     }
 
-    if (class_Name != "emptyLine")
+    if (row.className != 'emptyLine')
     {
         lockTd.insertAdjacentHTML("afterbegin",'<input type="checkbox" name="lock'+rowId+'"><br>');
     }
@@ -178,70 +156,84 @@ function createRow(class_Name, label, text, rowId)
     row.append(lockTd);
 
     parsedMCQ.append(row);
-    return row;//used to remember previousRow in parseMCQ ()
+
+    return row;
 }
 
-/*Called by parseMCQ ()
-Checks if the parsedMCQ table follows expected MCQ pattern, such as:
-" S #ABCD #ABCD S #ABCDE #AB #ABC S #ABCD  "
-Highlights in red the lines that don't follow the pattern.
-Does not alter table content
-*/
+// check if the parsedMCQ table follows expected pattern, such as ' S #ABCD #ABCD S #ABCDE #AB #ABC S #ABCD  '
 function validateParsedMCQ ()
 {
     let rows = Array.from(parsedMCQ.children);
 
     rows.forEach (function(row, index, array){
-        if (index==0 || index==rows.length-1) return; //skip table header. skip last row, which is empty
+        if (index == 0) return; //skip table header
+        if (index == rows.length-1) return; //skip last row, which is empty
 
-        let label = row.children[0].textContent;
-        if (/\d{1,3}/.test(label)) label="number"; //regex for 1/2/3-digit numbers
+        const label = row.children[0].textContent;
 
-        let previousLabel = array[index-1].children[0].textContent;
-        if (/\d{1,3}/.test(previousLabel)) previousLabel="number";
-        if (index==1) previousLabel="";
+        const previousLabel = (index > 1)
+            ? array[index-1].children[0].textContent
+            : ''; //table header has no label
 
-        let nextLabel = array[index+1].children[0].textContent;
-        if (/\d{1,3}/.test(nextLabel)) nextLabel="number";
+        const nextLabel = array[index+1].children[0].textContent;
 
-        let nextNextLabel;
-        if (index != rows.length-2)
+        const nextNextLabel = (index < rows.length - 2)
+            ? array[index + 2].children[0].textContent
+            : ''; //2nd-to-last row has no next-next row
+
+        if (label=='S') //sections may only occur in the middle of a ' S #' pattern
         {
-            nextNextLabel = array[index+2].children[0].textContent;
-            if (/\d{1,3}/.test(nextNextLabel)) {nextNextLabel="number"};
+            if (previousLabel!=='' || nextLabel!=='' || !isNum(nextNextLabel)) row.className='error';
         }
-        else
+        
+        if (label=='') //emptyLines should not occur in the middle of a '#ABCD' pattern
         {
-            nextNextLabel = "";
+            if (previousLabel=='A' || isNum(previousLabel) ||  isABCDE(nextLabel)) row.className='error';
+        }
+        
+        if (isNum(label)) //questions may only occur in the middle of a ' #A' pattern
+        {
+            if (previousLabel!=='' || nextLabel!='A') row.className='error';
         }
 
-        // sections may only occur in the middle of a " S #" pattern
-        if (label=="S" && (previousLabel!=="" || nextLabel!==""||nextNextLabel!="number")) row.className = "error";
+        if (label=='A') //'A' answers may only occur in the middle of a '#AB' pattern
+        {
+            if (!isNum(previousLabel) || nextLabel!='B') row.className='error';
+        }
 
-        //emptyLines should not occur in the middle of a "#ABCD" pattern
-        if (label=="" && (previousLabel=="A" || previousLabel=="number" || nextLabel==("A"||"B"||"C"||"D"||"E"))) row.className = "error";
+        if (label=='B') //'B' answers may only occur in the middle of 'ABC' or 'AB ' patterns 
+        {
+            if (previousLabel!='A' || (nextLabel!='C' && nextLabel!=='')) row.className='error';
+        }
 
-        //questions may only occur in the middle of a " #A" pattern
-        if (label=="number" && (previousLabel!=="" || nextLabel!="A")) row.className = "error";
+        if (label=='C') //'C' answers may only occur in the middle of 'BCD' or 'BC ' patterns
+        {
+            if (previousLabel!='B' || (nextLabel!='D' && nextLabel!=='')) row.className='error';
+        }
 
-        //'A' answers may only occur in the middle of a "#AB" pattern
-        if (label=="A" && (previousLabel!="number" || nextLabel!="B")) row.className = "error";
-        
-        //'B' answers may only occur in the middle of "ABC" or "AB " patterns 
-        if (label=="B" && (previousLabel!="A" || (nextLabel!="C" && nextLabel!==""))) row.className = "error";
-        
-        //'C' answers may only occur in the middle of "BCD" or "BC " patterns
-        if (label=="C" && (previousLabel!="B" || (nextLabel!="D" && nextLabel!==""))) row.className = "error";
-        
-        //'D' answers may only occur in the middle of "CDE" or "CD " patterns
-        if (label=="D" && (previousLabel!="C" || (nextLabel!="E" && nextLabel!==""))) row.className = "error";
-        
-        //'E' answers may only occur in the middle of a "DE " pattern
-        if (label=="E" && (previousLabel!="D" || nextLabel!="")) row.className = "error";
+        if (label=='D') //'D' answers may only occur in the middle of 'CDE' or 'CD ' patterns
+        {
+            if (previousLabel!='C' || (nextLabel!='E' && nextLabel!=='')) row.className='error';
+        }
+
+        if (label=='E') //'E' answers may only occur in the middle of a 'DE ' pattern
+        {
+            if (previousLabel!='D' || nextLabel!='') row.className='error';
+        }
     })
 }
 
+function isNum (label)
+{
+    if (/^\d{1,3}$/.test(label)) return true;
+    return false;
+}
 
+function isABCDE (label)
+{
+    if (/^[abcde]$/i.test(label)) return true;
+    return false;
+}
 
 //PART 2: FUNCTIONS FOR SHUFFLING THE PARSED MCQ TABLE
 
