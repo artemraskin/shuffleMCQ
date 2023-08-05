@@ -1,129 +1,381 @@
-﻿table {
-  border-collapse: collapse;
-  table-layout: fixed;
+/* ---------------------- LEFT ----------------------*/
+
+#left_div{
+    flex: 1;
+    overflow: auto;
+    background-color: var(--lightgray);
+    border: 3px solid black;
+    border-radius: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    position: relative;
+    min-height: 100px;
+    padding-left: 15px;
+    padding-bottom: 15px;
+    padding-right: 15px;
+    min-width: 400px;
 }
 
+.step{
+    display: none;
+    background-color: white;
+}
+
+#input_mcq_div{
+    display: block;
+}
+#input_mcq{
+    width: 100%;
+}
+
+#ak_div{ /*grid display set by goToStep()*/
+    grid-template-columns: 50% 50%;
+    align-content: start;
+}
+#ak_settings{
+    grid-column: 1 / span 2;
+}
+#input_ak{
+    width: calc(100% - 4px);
+}
+#parsed_ak{
+    width: calc(100% - 4px); /*why do I need this if I enabled border-box */
+    margin-left: 4px;
+}
+
+#output_div{
+    width: 100%;
+    font-size: small;
+}
+#output{
+    padding: 8px;
+    overflow: auto;
+}
+#output_format{
+    display: none;
+}
+#output_answer_key{
+    font-size: large;
+}
+
+.settings_gear{
+    width: 24px;
+    height: 24px;
+    position: absolute;
+    right: 5px;
+    top: 5px;
+}
+
+.settings{
+    min-height: 40px;
+    position: relative;
+    padding: 8px;
+}
+
+.settings button,
+.settings div{
+    display: none;
+}
+
+/* --- nav tabs  ---*/
+
+a {
+    color: #337ab7;
+    text-decoration: none;
+}
+
+a:hover,
+a:focus {
+    color: #23527c;
+    text-decoration: underline;
+}
+
+a:focus {
+    outline: 5px auto -webkit-focus-ring-color;
+    outline-offset: -2px;
+}
+
+.nav_tabs {
+    border-bottom: 3px solid #ddd;
+    margin-bottom: 0;
+    padding-left: 0;
+    list-style: none;
+    width: 100%;
+}
+
+.nav_tabs > li {
+    float: left;
+    margin-bottom: -3px;
+    position: relative;
+    display: block;
+}
+
+.nav_tabs > li > a {
+    margin-right: 2px;
+    line-height: 1.42857143;
+    border: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+}
+
+.nav_tabs > li > a:hover {
+    border-color: #eeeeee #eeeeee #ddd;
+}
+
+.nav_tabs > li > a:hover,
+.nav_tabs > li > a:focus {
+    text-decoration: none;
+    background-color: #eeeeee;
+}
+
+.nav_tabs > li.active > a,
+.nav_tabs > li.active > a:hover,
+.nav_tabs > li.active > a:focus {
+    color: #555555;
+    background-color: white;
+    font-weight: 700;
+    border: 3px solid #ddd;
+    border-bottom-color: transparent;
+    cursor: default;
+}
+
+.nav_tabs:after{ /*bottom line*/
+    content: " ";
+    display: table;
+    clear: both;
+}
+
+
+/* ---------------------- MIDDLE ----------------------*/
+
+#middle_div button {
+    border: 3px solid #666;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: large;
+    position: relative;
+    top: 76px;
+    color: black;
+    border-radius: 10px;
+    border: 3px solid;
+    min-width: 9ch;
+    display: none;
+    background-color: white;
+}
+
+#middle_div button:active {
+    background-color: white;
+    transform: scale(0.95);
+}
+
+#middle_div #parse_mcq_button {
+    display: block;
+}
+
+/* ---------------------- RIGHT ----------------------*/
+
+#right_div {
+    /*flex-grow: 1;  TODO why does this not work? */
+    flex: 1;
+    overflow: auto;
+    background-color: var(--lightgray);
+    border: 3px solid black;
+    border-radius: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    min-width: 250px;
+
+}
+
+#user_guide_button {
+    color: #337ab7;
+    border-radius: 100%;
+    width: 50px;
+    height: 50px;
+    font-size:x-large;
+    margin-right: 5px;
+    margin-top: -10px;
+    float: right;
+    border: 3px solid #ddd;
+    background-color: white;
+    z-index: 4;
+}
+
+#parsed_mcq {
+    width: calc(100% - 30px);
+    margin-left: 15px;
+    margin-right: 15px;
+    min-width: 18ch;
+    display: none;
+}
+#parsed_mcq th {
+    position: -webkit-sticky; /* Safari */
+    position: sticky;
+    background-color: white;
+    z-index: 2;
+    top: 63px;
+}
+
+/* --- parsed_mcq rows  ---*/
+
+.emptyLine {
+    background-color: Gray;
+}
+.question {
+    background-color: LightGoldenRodYellow;
+}
+.answer {
+    background-color: Azure;
+}
+.section {
+    background-color: HoneyDew;
+}
+.error {
+    border:5px solid red;
+}
+
+.tableCellDiv {
+    max-height: 3em;
+}
+
+#user_guide {
+    padding: 10px;
+    background-color: white;
+    border-bottom: solid 10px var(--lightgray);
+    border-left: solid 10px var(--lightgray);
+    border-right: solid 10px var(--lightgray);
+}
+
+.content {
+    padding-left: 15px;
+}
+
+
+/* ---------------------- GLOBAL ----------------------*/
+
+:root {
+    --lightgray: rgb(240, 240, 240);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    min-height: 100%;
+    margin: 0px;
+    font-family: "Geneva";
+    background-color: rgb(70, 70, 70);
+    margin-block-start: 0;
+    display: flex;
+}
+
+ul {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+table {
+    border-collapse: separate;
+    table-layout: fixed;
+    font-size: small;
+    border-spacing: 0;
+}
 
 table, tr, th, td {
-    border: 1px solid black;
+    border: 0.5px solid black;
+}
+
+tr {
+    height: 1em;
+    margin: 0;
+}
+
+td {
+    width: 100px;
+    white-space: nowrap;
+    overflow: auto;
+    padding: 2px;
+}
+
+th {
+    font-weight: normal;
+    font-variant: small-caps;
+    border-top: solid black 2px;
+    border-bottom: solid black 2px;
+    border-left: solid black 1px;
+    border-right: solid black 1px;
+}
+
+p {
+    margin: 0px;
+}
+
+textarea {
+    font-size: small;
+    padding: 0;
+    margin: 0;
+}
+
+input {
+    font-size: small;
+}
+
+button {
+    font-family: "Geneva";
+}
+
+.header {
+    position: -webkit-sticky; /* Safari */
+    position: sticky;
+    top: 0px;
+    z-index: 1;
+    height: 63px;
+    padding-top: 15px;
+    background-color: var(--lightgray);
+}
+
+/* ---------------------- MISC ----------------------*/
+
+#browserError {
+    position: fixed;
+    top: 0;
+    width:100%;
+    height:100%;
+    z-index:1;
+    text-align: center;
+    padding-top: 140px;
+    background-color: white;
+    color: red;
+}
+
+.line {
+    position: fixed;
+    width: 100%;
+    height: 1px;
+    background-color: red;
+    z-index: 100;
+}
+
+#l1 {
+    top: 10px;
+}
+
+#l2 {
+    top: 28px;
 }
 
 
-tr{
-  height: 1em;
-}
-
-
-td{
-  width: 100px;
-  white-space: nowrap;
-  overflow: scroll;
-}
-
-
-.emptyLine{
-  background-color: DarkGray;
-}
-
-
-.question {
-  background-color: LightGoldenRodYellow;
-}
-
-
-.answer {
-  background-color: Azure;
-}
-
-
-.section{
-  background-color: HoneyDew;
-}
-
-
-.error{
-  border:5px solid red;
-}
-
-
-.tableCellDiv{
-  max-height: 3em;
-}
-
-
-#topDiv{
-  /*shuffle buttons*/
-  position: fixed;
-  z-index: 9;
-  width: 95%;/*TODO why do other divs not need width*/
-  text-align: center;
-  border: 3px solid black;
-  background-color: white;
-}
-
-
-#middleDiv{
-  /*inputMCQ textarea and parsedMCQ table*/
-  position: relative;
-  top: 50px;
-  border: 3px solid black;
-  height: 50%;/*doesn't work*/
-  min-height: 100px;
-  overflow: scroll;
-}
-
-
-#bottomDiv{
-  /*inputAK textarea, parsedAK table, outputMCQ text*/
-  position: relative;
-  top: 50px;
-  border: 3px solid black;
-  max-height: 400px;
-  overflow: scroll;
-}
-
-
-#inputMCQ{
-  /*textarea*/
-  /*position: absolute;*/
-  float: left;
-  width: 30%;
-}
-
-
-#parsedMCQ{
-  /*table*/
-  position: relative;
-  left: 20px;
-  width: 50%;
-}
-
-
-#inputAK_Div{
-  float: left;
-  width: 15%;
-}
-
-
-#inputAK{
-  width: 100%;
-  padding: 0px;
-}
-
-
-#parsedAK_Div{
-  float: left;
-  width: 15%;
-}
-
-
-#parsedAK{
-  width: 100%;
-  padding: 0px;
-}
-
-
-#outputMCQ_Div{
-  float: left;
-  width: 60%;
+#l3 {
+    top: 76px;
 }
