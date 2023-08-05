@@ -11,10 +11,10 @@
     margin-left: 10px;
     position: relative;
     min-height: 100px;
-    padding-left: 15px;
-    padding-bottom: 15px;
-    padding-right: 15px;
-    min-width: 400px;
+    padding-left: var(--main_div_padding);
+    padding-bottom: var(--main_div_padding);
+    padding-right: var(--main_div_padding);
+    min-width: 460px;
 }
 
 .step{
@@ -25,13 +25,20 @@
 #input_mcq_div{
     display: block;
 }
-#input_mcq{
+#input_mcq{ 
     width: 100%;
+    vertical-align: bottom;
+    font-size: small;
+    margin: 0;
+    padding: 5px;
+}
+#input_format{
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 #ak_div{ /*grid display set by goToStep()*/
     grid-template-columns: 50% 50%;
-    align-content: start;
 }
 #ak_settings{
     grid-column: 1 / span 2;
@@ -50,21 +57,9 @@
 }
 #output{
     padding: 8px;
-    overflow: auto;
 }
-#output_format{
-    display: none;
-}
-#output_answer_key{
+#output_ak{
     font-size: large;
-}
-
-.settings_gear{
-    width: 24px;
-    height: 24px;
-    position: absolute;
-    right: 5px;
-    top: 5px;
 }
 
 .settings{
@@ -72,31 +67,40 @@
     position: relative;
     padding: 8px;
 }
-
 .settings button,
 .settings div{
     display: none;
 }
+.settings_gear{
+    width: 24px;
+    height: 24px;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+}
+
+#left_div span{
+    font-size: 13.333px;
+}
+
+#left_div input{
+    background-image: linear-gradient(to right, #ddd 1ch, white 1ch);
+    background-size: 2ch 100%;
+    background-repeat: repeat;
+    font-family: monospace;
+    font-size: large;
+    border: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+    outline: 1px solid black;
+}
+#left_div input:focus{
+    outline: 2px solid #025ecc;
+}
 
 /* --- nav tabs  ---*/
 
-a {
-    color: #337ab7;
-    text-decoration: none;
-}
-
-a:hover,
-a:focus {
-    color: #23527c;
-    text-decoration: underline;
-}
-
-a:focus {
-    outline: 5px auto -webkit-focus-ring-color;
-    outline-offset: -2px;
-}
-
-.nav_tabs {
+#nav_tabs {
     border-bottom: 3px solid #ddd;
     margin-bottom: 0;
     padding-left: 0;
@@ -104,36 +108,44 @@ a:focus {
     width: 100%;
 }
 
-.nav_tabs > li {
+#nav_tabs > li {
     float: left;
     margin-bottom: -3px;
     position: relative;
     display: block;
 }
 
-.nav_tabs > li > a {
+#nav_tabs > li > a {
+    color: #337ab7;
+    text-decoration: none;
     margin-right: 2px;
     line-height: 1.42857143;
-    border: 1px solid transparent;
+    border: 3px solid transparent;
     border-radius: 4px 4px 0 0;
     position: relative;
     display: block;
     padding: 10px 15px;
 }
 
-.nav_tabs > li > a:hover {
+#nav_tabs > li > a:hover {
     border-color: #eeeeee #eeeeee #ddd;
 }
 
-.nav_tabs > li > a:hover,
-.nav_tabs > li > a:focus {
-    text-decoration: none;
-    background-color: #eeeeee;
+#nav_tabs > li > a:focus {
+    outline: 5px auto -webkit-focus-ring-color;
+    outline-offset: -2px;
 }
 
-.nav_tabs > li.active > a,
-.nav_tabs > li.active > a:hover,
-.nav_tabs > li.active > a:focus {
+#nav_tabs > li > a:hover,
+#nav_tabs > li > a:focus {
+    text-decoration: none;
+    background-color: #eeeeee;
+    color: #23527c;
+}
+
+#nav_tabs > li.active > a,
+#nav_tabs > li.active > a:hover,
+#nav_tabs > li.active > a:focus {
     color: #555555;
     background-color: white;
     font-weight: 700;
@@ -141,13 +153,6 @@ a:focus {
     border-bottom-color: transparent;
     cursor: default;
 }
-
-.nav_tabs:after{ /*bottom line*/
-    content: " ";
-    display: table;
-    clear: both;
-}
-
 
 /* ---------------------- MIDDLE ----------------------*/
 
@@ -171,7 +176,7 @@ a:focus {
 
 #middle_div button:active {
     background-color: white;
-    transform: scale(0.95);
+    transform: scale(0.97);
 }
 
 #middle_div #parse_mcq_button {
@@ -181,7 +186,6 @@ a:focus {
 /* ---------------------- RIGHT ----------------------*/
 
 #right_div {
-    /*flex-grow: 1;  TODO why does this not work? */
     flex: 1;
     overflow: auto;
     background-color: var(--lightgray);
@@ -192,6 +196,41 @@ a:focus {
     margin-right: 10px;
     min-width: 250px;
 
+}
+
+#parsed_mcq {
+    width: calc(100% - 30px);
+    margin-left: var(--main_div_padding);
+    margin-right: var(--main_div_padding);
+    margin-bottom: var(--main_div_padding);
+    min-width: 18ch;
+    display: none;
+}
+#parsed_mcq th {
+    position: -webkit-sticky; /* Safari */
+    position: sticky;
+    background-color: white;
+    z-index: 2;
+    top: 63px;
+}
+.empty_line {
+    background-color: Gray;
+}
+.question {
+    background-color: LightGoldenRodYellow;
+}
+.answer {
+    background-color: Azure;
+}
+.section {
+    background-color: HoneyDew;
+}
+.error {
+    outline: 5px solid red;
+    background-color: white;
+}
+.parsed_mcq_cell_div {
+    max-height: 3em;
 }
 
 #user_guide_button {
@@ -207,65 +246,36 @@ a:focus {
     background-color: white;
     z-index: 4;
 }
-
-#parsed_mcq {
-    width: calc(100% - 30px);
-    margin-left: 15px;
-    margin-right: 15px;
-    min-width: 18ch;
-    display: none;
-}
-#parsed_mcq th {
-    position: -webkit-sticky; /* Safari */
-    position: sticky;
-    background-color: white;
-    z-index: 2;
-    top: 63px;
-}
-
-/* --- parsed_mcq rows  ---*/
-
-.emptyLine {
-    background-color: Gray;
-}
-.question {
-    background-color: LightGoldenRodYellow;
-}
-.answer {
-    background-color: Azure;
-}
-.section {
-    background-color: HoneyDew;
-}
-.error {
-    border:5px solid red;
-}
-
-.tableCellDiv {
-    max-height: 3em;
-}
-
 #user_guide {
-    padding: 10px;
+    padding: 15px;
     background-color: white;
-    border-bottom: solid 10px var(--lightgray);
-    border-left: solid 10px var(--lightgray);
-    border-right: solid 10px var(--lightgray);
+    border-bottom: solid var(--main_div_padding) var(--lightgray);
+    border-left: solid var(--main_div_padding) var(--lightgray);
+    border-right: solid var(--main_div_padding) var(--lightgray);
 }
-
 .content {
     padding-left: 15px;
 }
-
 
 /* ---------------------- GLOBAL ----------------------*/
 
 :root {
     --lightgray: rgb(240, 240, 240);
+    --main_div_padding: 15px;
 }
 
 * {
     box-sizing: border-box;
+}
+
+.header {
+    position: -webkit-sticky; /* Safari */
+    position: sticky;
+    top: 0px;
+    z-index: 1;
+    height: 63px;
+    padding-top: var(--main_div_padding);
+    background-color: var(--lightgray);
 }
 
 html, body {
@@ -277,37 +287,31 @@ html, body {
     margin-block-start: 0;
     display: flex;
 }
-
 ul {
     margin-top: 0;
     margin-bottom: 0;
     padding-top: 0;
     padding-bottom: 0;
 }
-
 table {
     border-collapse: separate;
     table-layout: fixed;
     font-size: small;
     border-spacing: 0;
 }
-
 table, tr, th, td {
     border: 0.5px solid black;
 }
-
 tr {
     height: 1em;
     margin: 0;
 }
-
 td {
     width: 100px;
     white-space: nowrap;
     overflow: auto;
     padding: 2px;
 }
-
 th {
     font-weight: normal;
     font-variant: small-caps;
@@ -316,33 +320,11 @@ th {
     border-left: solid black 1px;
     border-right: solid black 1px;
 }
-
 p {
-    margin: 0px;
-}
-
-textarea {
-    font-size: small;
-    padding: 0;
     margin: 0;
 }
-
-input {
-    font-size: small;
-}
-
 button {
-    font-family: "Geneva";
-}
-
-.header {
-    position: -webkit-sticky; /* Safari */
-    position: sticky;
-    top: 0px;
-    z-index: 1;
-    height: 63px;
-    padding-top: 15px;
-    background-color: var(--lightgray);
+    font-family: 'Geneva';
 }
 
 /* ---------------------- MISC ----------------------*/
@@ -368,14 +350,9 @@ button {
 }
 
 #l1 {
-    top: 10px;
+    top: 798px;
 }
 
 #l2 {
-    top: 28px;
-}
-
-
-#l3 {
-    top: 76px;
+    top: 804px;
 }
