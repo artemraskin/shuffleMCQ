@@ -1,65 +1,276 @@
-﻿<!DOCTYPE html>
+
+<!DOCTYPE html>
 <html>
 
-
-  <head>
+<head>
+    <title>Shuffle MCQ</title>
     <link rel="stylesheet" href="style.css">
-  </head>
+    <link rel='icon' href='favicon.ico' type='image/x-icon'/> <!-- /favicon.ico -->
+</head>
 
+<body>
 
-  <body>
-    
-    <!--class not button. style button width-->
-    <div id="topDiv">
-      <button id="testModeButton">Enter<br>Test Mode</button>
-      <button id="shuffleSectionsButton">Shuffle<br>Sections</button>
-      <button id="shuffleQuestionsButton">Shuffle<br>Questions</button>
-      <button id="shuffleAnswersButton">Shuffle<br>Answers</button>
+    <div class="line" id="l1"></div>
+    <div class="line" id="l2"></div>
+    <div class="line" id="l3"></div>
+    <div class="line" id="l4"></div>
+    <div class="line" id="l5"></div>
+
+    <div id="left_div">
+            
+        <div class="header" >
+                        
+            <ul class="nav_tabs" >
+                <li class="active" id="input_mcq_div_nav"><a onclick="goToStep(1)">1. Input MCQ</a></li>
+                <li id="ak_div_nav"><a onclick="goToStep(2)">2. Answer Key</a></li>
+                <li id="output_div_nav"><a onclick="goToStep(3)">3. Output</a></li>
+            </ul>
+        </div>
+
+        <div id="input_mcq_div" class="step">
+
+            <div id="input_mcq_settings" class="settings">
+                <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_mcq_button); toggle(input_format)">
+                <button id="sample_mcq_button" class="settings_button" onclick="toggleSampleMcq()">Enter sample MCQ</button>
+                <br>
+                <div id="input_format">
+                    <span>Question format = </span>
+                    <input type="text" size="5" name="before_question_number" value="" onclick="createOutput()">
+                    <span>+ question number + </span>
+                    <input type="text" size="5" name="after_question_number" value=". " onclick="createOutput()">
+                    <span>+ question text</span>
+                    <br><br>
+                    <span>Answer format = </span>
+                    <input type="text" size="5" name="before_answer_letter" value="&nbsp;" onclick="createOutput()">
+                    <span>+ answer letter + </span>
+                    <input type="text" size="5" name="after_answer_letter" value=". " onclick="createOutput()">
+                    <span>+ answer text</span>
+                    <br><br>
+                </div>
+            </div>
+
+            <textarea id="input_mcq" rows="100" placeholder=
+"Paste your multiple-choice questions here.
+Click outside of this text area to begin processing them.
+
+MCQs should be formatted as below. See user guide for details.
+
+Section instructions (optional)
+
+1. Question text
+A. Answer choice text
+B. Answer choice text
+C. Answer choice text
+D. Answer choice text
+
+2. Question text
+A. Answer choice text
+B. Answer choice text
+
+Section instructions (optional)
+
+3. Question text
+A. Answer choice text
+B. Answer choice text
+C. Answer choice text
+D. Answer choice text
+E. Answer choice text"
+            ></textarea> 
+        </div>
+
+        <div id="ak_div" class="step">
+            <div id="ak_settings" class="settings">
+                <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_ak_button)">
+                <button id="sample_ak_button" class="settings_button" onclick="toggleSampleAk()">Enter sample answer key</button>
+            </div>
+            <textarea id="input_ak" rows="100" placeholder=
+"Paste your answer key here.
+Click outside of this text area to begin processing it."
+            ></textarea>
+            <div>
+                <table id="parsed_ak">
+                    <tr>
+                        <th>q</th>
+                        <th>a</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div id="output_div" class="step">
+            <div id="output_settings" class="settings">
+                <img src="gear-solid.svg" alt="settings" class="settings_gear" id="output_settings_gear" onclick="toggle(output_format)">
+                <div id="output_format">
+                    <span>Question format = </span>
+                    <input type="text" size="5" name="before_question_number" value="">
+                    <span>+ question number + </span>
+                    <input type="text" size="5" name="after_question_number" value=". ">
+                    <span>+ question text</span>
+                    <br><br>
+                    <span>Answer format = </span>
+                    <input type="text" size="5" name="before_answer_letter" value="&nbsp;">
+                    <span>+ answer letter + </span>
+                    <input type="text" size="5" name="after_answer_letter" value=". ">
+                    <span>+ answer text</span>
+                    <br><br>
+                </div>
+            </div>
+            <p id="output"></p>
+        </div>
     </div>
-    
-    <div id="middleDiv">
-    <textarea id="inputMCQ" rows="30"></textarea> 
+
+    <div id="middle_div">
+        <button id="parse_mcq_button" onclick="parseMCQ()">Parse<br>MCQ</button>
+        <button id="go_to_step_2_button" onclick="goToStep(2)">Next<br>Step</button>
+        <button id="parse_ak_button" onclick="addAnswerKey()">Parse<br>Key</button>
+        <button id="go_to_step_3_button" onclick="goToStep(3)">Next<br>Step</button>
+        <button id="shuffle_sections_button" onclick="shuffleSections()">Shuffle<br>Sections</button>
+        <button id="shuffle_questions_button" onclick="shuffleQuestions()">Shuffle<br>Questions</button>
+        <button id="shuffle_answers_button" onclick="shuffleAnswers()">Shuffle<br>Answers</button>
+    </div>
+
+    <div id="right_div">
+        <div class="header">
+            <button id="user_guide_button" title="User Guide" onclick="toggle(user_guide); toggle(parsed_mcq, 'table');">?</button>
+        </div>
+        <table id="parsed_mcq"></table>
+        <div id="user_guide">
+            <p><b>About</b></p>
+            <p class="content">
+                ShuffleMCQ is a tool for creating multiple versions of multiple-choice-question quizzes.
+            </p>
+            <br>
+            <p><b>Step 1: Entering your MCQs</b></p>
+            <p class="content">
+                Paste the entire text of your quiz into the 'Input MCQ' text area.<br>
+                The text consists of lines. Each line is the piece of text in between two line breaks. Visually, it may appear as multiple lines.
+                You can create a linebreak by pressing the 'enter' or 'return' key.<br>
+            </p>
+            <p class="content">
+                There are four types of lines:
+            </p>
+            <ul>
+                <br>
+                <li><u>Empty line</u><br>May include spaces or tabs, but no other text. When parsed, empty lines get an empty label.</li>
+                <br>
+                <li><u>Question line</u><br> Contains the number label and the text of a multiple-choice question.
+                Must begin with the question number followed by a space or a tab to separate it from the text.
+                The question number may include parenthesis or periods, like 10. or 7), but no other text.
+                The entire question must fit in one line.</li>
+                <br>
+                <li><u>Answer line</u><br> Contains the letter label and the text of one answer choice.
+                Must begin with the letter label followed by a space or a tab to separate it from the text.
+                The letter label may include parenthesis or periods, like a. or (B), but no other text.
+                The letter label may be either lower or upper case. The entire answer choice must fit in one line.</li>
+                <br>
+                <li><u>Section header line</u><br> A section consists of one or more questions.
+                A section header contains the instructions that apply to that specific set of questions.
+                All lines that are not empty lines, question lines, or answer lines will be classified as section header lines.
+                Unlike a question or an answer choice, a section header may span multiple lines.
+                When parsed, section headers get the label 'S'.</li>
+                <br>
+            </ul>
+
+            <p class="content">
+                A question text block is a question followed by its answer choices. Each question may have between 2 and 5 answer choices.<br>
+                A section header is its own section header text block.<br>
+                There should be no empty lines in the middle of a text block. Each text block must be separated from the next text block by at least one empty line.<br>
+                The result would resemble the following pattern:<br>
+                S 1ABCD 2ABCDE 3AB S 4ABCD 5ABC <br>
+                To see an example of a correctly formatted quiz, click the 'Enter Test Mode' button.
+            </p>
+            <p class="content">
+                All text entered into the Input MCQ text area will become plain text.
+                If you need to preserve some formatting, you can add it manually with HTML.
+                For example, if you want a question to span multiple lines, instead of pressing the 'enter' key, add a line break with &lt;br&gt;
+            </p>
+            <br>
+
+            <p><b>Step 2: Validation</b></p>
+            <p class="content">
+                The Parsed MCQ table will show how the script interpreted your input.<br>
+                Section header rows will be green. Question rows will be yellow. Answer rows will be blue. Empty rows will be gray.
+                If a row appears to be out of order, its border will be highlighted in red.<br>
+                Visually scan the Parsed MCQ table to ensure that it matches what you intended to enter. If the full text is not visible in a table cell, scrolling is enabled.
+                If you find any errors, go back to the Input MCQ text area and fix them. Then click outside the text area to refresh the table.
+            </p>
+            <br>
+
+            <p><b>Step 3: Entering the Anwer Key</b></p>
+            <p class="content">
+                The Parsed MCQ table has a 'Key' column. Check the checkboxes next to the correct answer for each question.
+                If there is more than one correct answer, you may check multiple checkboxes per question.
+            </p>
+            <p class="content">
+                Alternatively, instead of manually marking the correct answers, you can paste your entire answer key into the Input Answer Key text area.
+                This will auto-populate the Parsed MCQ 'Key' column.
+                It doesn't matter how you format your answer key, so long as it contains the letter(s) of the correct answer(s) following the number of their question.
+                Any symbol other than 0123456789 and ABCDE will be ignored. The script is not case-sensitive.
+            </p>
+            <p class="content">
+                The Parsed Answer Key table will show how the script interpeted your answer key.
+                In case of an error, it will highlight the row border in red. There are three types of errors:<br>
+                Type 1: answer letter not found in question (e.g. 'D' can't be an answer to a true/false question)<br>
+                Type 2: the input doesn't include an answer letter for a question (e.g. "1B, 2C, 3 , 4BE" would display an error in the 3rd row).<br>
+                Type 3: question number from answer key not found in the Parsed MCQ table or found more than once.<br>
+                In case of an error, go back to the Input MCQ text area and fix it. Then click outside the text area to refresh both Parsed tables.
+            </p>
+            <br>
+
+            <p><b>Step 4: Shuffle!</b></p>
+            <p class="content">
+                A question block is a question followed by its answer choices.
+                A section is a section header followed by one or more question blocks.<br>
+            </p>
+            <p class="content">
+                The 'Shuffle Sections' button will randomly rearrange sections in the Parsed MCQ table.
+                The order of the questions and answers within each section does not change.
+                This button will also renumber all the questions to 1,2,3... in order.
+                If the 'Lock' column checkbox next to the section header is checked by the user,
+                that section will stay in place while the other sections are shuffled.
+            </p>
+            <p class="content">
+                The 'Shuffle Questions' button will randomly rearrange question blocks within each section.
+                The order of the sections does not change, and neither does the order of the answer choices within each question block.
+                This button will also renumber all the questions to 1,2,3... in order.
+                If the 'Lock' column checkbox next to the question is checked by the user,
+                that question block will stay in place while the other question blocks are shuffled.
+            </p>
+            <p class="content">
+                The 'Shuffle Answers' button will randomly rearrange answers within each question block.
+                The order of sections and questions within the Parsed MCQ table does not change.
+                If the 'Lock' column checkbox next to the answer choice is checked by the user,
+                that answer choice block will stay in place while the other answer choices are shuffled.
+                For example, if your answer choice is "E. All of the above," you may want to lock it,
+                since if it becomes "B. All of the above," then "all of the above" would technically only refer to "A."
+            </p>
+            <br>
+
+            <p><b>Step 5: Output</b></p>
+            <p class="content">
+                The Output MCQ section is the text representation of the Parsed MCQ table.
+                When Parsed MCQ is updated or shuffled, Output MCQ is updated/shuffled along with it.
+                Output Answer Key is generated based on the 'Key' column of the Parsed Answer Key table.
+                When the table is shuffled, the Output Answer Key is adjusted accordingly.
+            </p>
+            <p class="content">
+                The output section lets you set the question and answer choice format.
+                By default, each answer letter is followed by a period. If you prefer parentheses, enter:<br>
+                &nbsp;&nbsp;Answer format = <span style="background-color:lightgray">(</span> + answer letter + <span style="background-color:lightgray">) </span>  + answer text<br>
+                If you want to begin each answer choice line with a blank space, enter:<br>
+                &nbsp;&nbsp;Answer format = <span style="background-color:lightgray">&amp;nbsp;</span> + answer letter + <span style="background-color:lightgray"> </span>  + answer text<br>
+                If you want answer choice letters to be in lowercase, enter:<br>
+                &nbsp;&nbsp;Answer format = <span style="background-color:lightgray">&#60;span style="text-transform: lowercase;"&#62;</span> + answer letter + <span style="background-color:lightgray">. &#60;/span&#62;</span>  + answer text<br>
+            </p>
+
+            <p><b>Contact Me</b></p>
+            <p class="content">If you have any questions about how to use this website, found any bugs, or need me to customize the website to better fit the format of your quizzes, please email me at ShuffleMCQ@gmail.com</p>
+        </div>
+    </div>
 
 
-    <table id="parsedMCQ">
-      <tr>
-        <th style="width:5ch;">label</th>
-        <th>text</th>
-        <th style="width:4ch;">key</th>
-        <th style="width:4ch;">lock</th>
-      </tr>
-    </table>
-    
-    </div>
-    
-    <div id="bottomDiv">
-      
-    <div id="inputAK_Div">
-      <textarea id="inputAK" rows="30"></textarea>
-    </div>
-    
-    <div id="parsedAK_Div">
-    <table id="parsedAK">
-      <tr>
-        <th style="width:4ch">Q</th>
-        <th style="width:4ch">A</th>
-      </tr>
-    </table>
-    </div>
-    <div id="outputMCQ_Div">
-      <p id="outputMCQ">
-        test<br>
-        test<br>
-        test<br>
-      </p>
-    </div>
-    </div>
-    
+</body>
 
-
-    
-  <script src="script.js"></script>
-  </body>
-
+<script src="script.js"></script>
 
 </html>
