@@ -10,48 +10,34 @@
 
 <body>
 
-    <div class="line" id="l1"></div>
-    <div class="line" id="l2"></div>
-    <div class="line" id="l3"></div>
-    <div class="line" id="l4"></div>
-    <div class="line" id="l5"></div>
-
     <div id="left_div">
             
-        <div class="header" >
-                        
-            <ul class="nav_tabs" >
-                <li class="active" id="input_mcq_div_nav"><a onclick="goToStep(1)">1. Input MCQ</a></li>
-                <li id="ak_div_nav"><a onclick="goToStep(2)">2. Answer Key</a></li>
-                <li id="output_div_nav"><a onclick="goToStep(3)">3. Output</a></li>
-            </ul>
-        </div>
+        <ul id="nav_tabs" class="header">
+            <li class="active" id="input_mcq_div_nav"><a onclick="goToStep(1)">1. Input MCQ</a></li>
+            <li id="ak_div_nav"><a onclick="goToStep(2)">2. Answer Key</a></li>
+            <li id="output_div_nav"><a onclick="goToStep(3)">3. Output</a></li>
+        </ul>
 
         <div id="input_mcq_div" class="step">
 
-            <div id="input_mcq_settings" class="settings">
+            <div class="settings">
                 <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_mcq_button); toggle(input_format)">
                 <button id="sample_mcq_button" class="settings_button" onclick="toggleSampleMcq()">Enter sample MCQ</button>
-                <br>
                 <div id="input_format">
-                    <span>Question format = </span>
-                    <input type="text" size="5" name="before_question_number" value="" onclick="createOutput()">
-                    <span>+ question number + </span>
-                    <input type="text" size="5" name="after_question_number" value=". " onclick="createOutput()">
-                    <span>+ question text</span>
-                    <br><br>
-                    <span>Answer format = </span>
-                    <input type="text" size="5" name="before_answer_letter" value="&nbsp;" onclick="createOutput()">
-                    <span>+ answer letter + </span>
-                    <input type="text" size="5" name="after_answer_letter" value=". " onclick="createOutput()">
-                    <span>+ answer text</span>
-                    <br><br>
+                    <span>
+                        Question/Answer format
+                        = line&nbsp;start
+                        + spaces&nbsp;(optional)
+                        + Q/A&nbsp;number/letter&nbsp;surrounded&nbsp;by&nbsp;any&nbsp;of&nbsp;
+                        <input type="text" size="5" id="label_chars" value="().">
+                        + space
+                        + Q/A&nbsp;text
+                    </span>
                 </div>
             </div>
 
             <textarea id="input_mcq" rows="100" placeholder=
 "Paste your multiple-choice questions here.
-Click outside of this text area to begin processing them.
 
 MCQs should be formatted as below. See user guide for details.
 
@@ -98,20 +84,20 @@ Click outside of this text area to begin processing it."
         </div>
 
         <div id="output_div" class="step">
-            <div id="output_settings" class="settings">
+            <div class="settings">
                 <img src="gear-solid.svg" alt="settings" class="settings_gear" id="output_settings_gear" onclick="toggle(output_format)">
                 <div id="output_format">
                     <span>Question format = </span>
-                    <input type="text" size="5" name="before_question_number" value="">
-                    <span>+ question number + </span>
-                    <input type="text" size="5" name="after_question_number" value=". ">
-                    <span>+ question text</span>
+                    <input type="text" size="6" id="before_q" value="" onblur="createOutput()">
+                    <span>+ Q number + </span>
+                    <input type="text" size="6" id="after_q" value=". " onblur="createOutput()">
+                    <span>+ A text</span>
                     <br><br>
                     <span>Answer format = </span>
-                    <input type="text" size="5" name="before_answer_letter" value="&nbsp;">
-                    <span>+ answer letter + </span>
-                    <input type="text" size="5" name="after_answer_letter" value=". ">
-                    <span>+ answer text</span>
+                    <input type="text" size="6" id="before_a" value="&nbsp;" onblur="createOutput()">
+                    <span>+ A letter + </span>
+                    <input type="text" size="6" id="after_a" value=". " onblur="createOutput()">
+                    <span>+ A text</span>
                     <br><br>
                 </div>
             </div>
@@ -120,13 +106,13 @@ Click outside of this text area to begin processing it."
     </div>
 
     <div id="middle_div">
-        <button id="parse_mcq_button" onclick="parseMCQ()">Parse<br>MCQ</button>
+        <button id="parse_mcq_button" onclick="parseMcq()">Parse<br>MCQ</button>
         <button id="go_to_step_2_button" onclick="goToStep(2)">Next<br>Step</button>
-        <button id="parse_ak_button" onclick="addAnswerKey()">Parse<br>Key</button>
+        <button id="parse_ak_button" onclick="parseAk()">Parse<br>Key</button>
         <button id="go_to_step_3_button" onclick="goToStep(3)">Next<br>Step</button>
-        <button id="shuffle_sections_button" onclick="shuffleSections()">Shuffle<br>Sections</button>
-        <button id="shuffle_questions_button" onclick="shuffleQuestions()">Shuffle<br>Questions</button>
-        <button id="shuffle_answers_button" onclick="shuffleAnswers()">Shuffle<br>Answers</button>
+        <button id="shuffle_sections_button" onclick="shuffle('sections')">Shuffle<br>Sections</button>
+        <button id="shuffle_questions_button" onclick="shuffle('questions')">Shuffle<br>Questions</button>
+        <button id="shuffle_answers_button" onclick="shuffle('answers')">Shuffle<br>Answers</button>
     </div>
 
     <div id="right_div">
