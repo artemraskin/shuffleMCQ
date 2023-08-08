@@ -5,26 +5,17 @@ function parseMcq()
 {
     clear('parsed_mcq');
     let previousRow;
-    let rowId = 0; //used for debugging only
+    let rowId = 0;
 
     const userInput = input_mcq.value.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
-    const labelChars = label_chars.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(' ', '');
+    if (!userInput) return input_mcq.select();
+    const labelChars = label_chars.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s/, '');
 
     const blocks = userInput.split(/\n\s*\n/); //split by empty line
     blocks.forEach(parseBlock);
 
+    validateParsedMcq();
     createOutput();
-    user_guide.style.display = 'none';
-
-    if (validateParsedMcq())
-    {
-        go_to_step_2_button.style.display = 'block';
-        parse_mcq_button.innerHTML = 'Parse<br>MCQ';
-    }
-    else
-    {
-        parse_mcq_button.innerHTML = 'Fix<br>Error';
-    }
 
     //helper functions:
 
@@ -37,14 +28,10 @@ function parseMcq()
                 previousRow = createRow('S', '');
                 createRow('', '');
             }
-            try
-            {
-                parseQuestionBlock(block);
-            }
-            catch(err)
-            {
-                previousRow = createRow('error', block);
-            }
+
+            try{ parseQuestionBlock(block); }
+            catch(err){ previousRow = createRow('error', block); }
+            
             createRow('', '');
         }
         else //section header block
@@ -111,7 +98,7 @@ function parseMcq()
         rowId++;
         row.id = rowId;
         textDiv.className = 'parsed_mcq_cell_div';
-        textDiv.innerHTML = text.replace(/\n/g, "<br>");
+        textDiv.innerHTML = '<a>'+text.replace(/\n/g, "<br>")+'</a>';
         textTd.append(textDiv);
         labelTd.textContent = label;
 
@@ -138,12 +125,12 @@ function parseMcq()
     // check if the parsed_mcq table follows expected pattern, such as ' S #ABCD #ABCD S #ABCDE #AB #ABC S #ABCD  '
     function validateParsedMcq ()
     {
-        let rows = Array.from(parsed_mcq.children);
-        let status = true;
+        const rows = Array.from(parsed_mcq.children);
+        let firstErrorRow = false;
 
         rows.forEach (function(row, index, array){
-            if (index == 0) return; //skip table header
-            if (index == rows.length-1) return; //skip last row, which is empty
+            if (index === 0) return; //skip table header
+            if (index === rows.length-1) return; //skip last row, which is empty
 
             const label = row.children[0].textContent;
 
@@ -157,51 +144,69 @@ function parseMcq()
                 ? array[index + 2].children[0].textContent
                 : ''; //2nd-to-last row has no next-next row
 
-            if (label=='S') //sections may only occur in the middle of a ' S #' pattern
+            if (label==='S') //sections may only occur in the middle of a ' S #' pattern
             {
                 if (previousLabel!=='' || nextLabel!=='' || !isNum(nextNextLabel)) row.className='error';
             }
             
-            if (label=='') //empty lines should not occur in the middle of a '#ABCD' pattern
+            if (label==='') //empty lines should not occur in the middle of a '#ABCD' pattern
             {
-                if (previousLabel=='A' || isNum(previousLabel) ||  isABCDE(nextLabel)) row.className='error';
+                if (previousLabel==='A' || isNum(previousLabel) ||  isABCDE(nextLabel)) row.className='error';
             }
             
             if (isNum(label)) //questions may only occur in the middle of a ' #A' pattern
             {
-                if (previousLabel!=='' || nextLabel!='A') row.className='error';
+                if (previousLabel!=='' || nextLabel!=='A') row.className='error';
             }
 
-            if (label=='A') //'A' answers may only occur in the middle of a '#AB' pattern
+            if (label==='A') //'A' answers may only occur in the middle of a '#AB' pattern
             {
-                if (!isNum(previousLabel) || nextLabel!='B') row.className='error';
+                if (!isNum(previousLabel) || nextLabel!=='B') row.className='error';
             }
 
-            if (label=='B') //'B' answers may only occur in the middle of 'ABC' or 'AB ' patterns 
+            if (label==='B') //'B' answers may only occur in the middle of 'ABC' or 'AB ' patterns 
             {
-                if (previousLabel!='A' || (nextLabel!='C' && nextLabel!=='')) row.className='error';
+                if (previousLabel!=='A' || (nextLabel!=='C' && nextLabel!=='')) row.className='error';
             }
 
-            if (label=='C') //'C' answers may only occur in the middle of 'BCD' or 'BC ' patterns
+            if (label==='C') //'C' answers may only occur in the middle of 'BCD' or 'BC ' patterns
             {
-                if (previousLabel!='B' || (nextLabel!='D' && nextLabel!=='')) row.className='error';
+                if (previousLabel!=='B' || (nextLabel!=='D' && nextLabel!=='')) row.className='error';
             }
 
-            if (label=='D') //'D' answers may only occur in the middle of 'CDE' or 'CD ' patterns
+            if (label==='D') //'D' answers may only occur in the middle of 'CDE' or 'CD ' patterns
             {
-                if (previousLabel!='C' || (nextLabel!='E' && nextLabel!=='')) row.className='error';
+                if (previousLabel!=='C' || (nextLabel!=='E' && nextLabel!=='')) row.className='error';
             }
 
-            if (label=='E') //'E' answers may only occur in the middle of a 'DE ' pattern
+            if (label==='E') //'E' answers may only occur in the middle of a 'DE ' pattern
             {
-                if (previousLabel!='D' || nextLabel!='') row.className='error';
+                if (previousLabel!=='D' || nextLabel!=='') row.className='error';
             }
 
-            if (label==='error') status = false;
-            if (row.className === 'error') status = false;
+            if (!firstErrorRow)
+            {
+                if (label==='error') firstErrorRow = row.id;
+                if (row.className === 'error') firstErrorRow = row.id;
+            }
         })
 
-        return status;
+        updateMiddleButtons(firstErrorRow);
+    }
+
+    function updateMiddleButtons(firstErrorRow)
+    {
+        if (firstErrorRow)
+        {
+            go_to_step_2_button.style.display = 'none';
+            parse_mcq_button.innerHTML = 'Fix<br>Error';
+            document.getElementById(firstErrorRow).scrollIntoView( {behavior: 'smooth', block: 'center'} );
+        }
+        else
+        {
+            go_to_step_2_button.style.display = 'block';
+            parse_mcq_button.innerHTML = 'Parse<br>MCQ</a>';
+        }
     }
 
     function isNum (label)
@@ -220,85 +225,75 @@ function parseMcq()
 //Parse user input from input_ak textarea. Build/validate parsed_ak table. Populate key-column in parsed_mcq table.
 function parseAk()
 {
-
-    let userInput = input_ak.value.toUpperCase()+' ';
-    let rawKeys = userInput.match(/\d+\D+/g); //Split userInput into array of rawKey strings. Each rawKey is one number followed by text
-    let rowsMcq = Array.from(parsed_mcq.children);
-    let answers = parsed_mcq.getElementsByClassName('answer');
+    const userInput = input_ak.value.toUpperCase();
+    if(!userInput) return input_ak.select();
+    const rawKeys = (userInput+' ').match(/\d+\D+/g) || [userInput]; //Split userInput into array of rawKey strings. Each rawKey is one number followed by text (or by ' ' if userInput ends with a number)
+    const rowsMcq = Array.from(parsed_mcq.children);
+    const answers = parsed_mcq.getElementsByClassName('answer');
     let validAk = true;
+    let numbers=[];
 
     for (let answer of answers) answer.children[2].firstElementChild.checked = false; //reset all key-column checkboxes to not checked
     clear('parsed_ak');
 
     //nested forEach loops: go through each rawKey and compare it to each parsed_mcq row
-    rawKeys.forEach(function(rawKey){
-        let number = rawKey.match(/\d+/); //regex for 1-or-more-digit number
-        let rowAk = document.createElement('tr');
-        let questionTdAk = document.createElement('td'); //Td for Question # in parsed_ak
-        let answerTdAk = document.createElement('td'); //Td for correct Answer letter(s) in parsed_ak
-
+    rawKeys.forEach(function(rawKey){        
+        const rowAk = document.createElement('tr');
+        const questionTdAk = document.createElement('td');
+        const answerTdAk = document.createElement('td');
+        const errorMessageTdAk = document.createElement('td');
+        const number = rawKey.match(/\d+/) ? rawKey.match(/\d+/)[0] : '';
         questionTdAk.textContent = number;
 
-        let correctAnswerIndexes = []; //used later for rowsMcq[index+correctAnswerIndex]
+        let correctAnswers = []; //A=1, B=2, etc.
         ['index 0','A','B','C','D','E'].forEach(function(letter,index){
             if (rawKey.includes(letter))
             {
-                correctAnswerIndexes.push(index);
+                correctAnswers.push(index);
                 answerTdAk.textContent+=letter;
             }
         })
 
         rowAk.append(questionTdAk);
         rowAk.append(answerTdAk);
+        rowAk.append(errorMessageTdAk);
         parsed_ak.append(rowAk);
 
+        if (!number) return setError('no number in key', rowAk);
+        if (correctAnswers.length === 0) return setError('no letter in key', rowAk);
+        if (numbers.includes(number)) return setError('duplicate # in key', rowAk);
+        numbers.push(number);
+
         let matchCount = 0; //number of times question number from answer key is found in parsed_mcq question numbers
-        if (correctAnswerIndexes.length>0)
-        {
-            rowsMcq.forEach(function(rowMcq, index){
-                if (!rowMcq.classList.contains('question')) return;
 
-                if (rowMcq.children[0].textContent == number) //for each Mcq row that has a question, check if it matches the number in the current rawKey
-                {
-                    matchCount++;
-                    for (let correctAnswerIndex of correctAnswerIndexes){
-                        /*in parsed_mcq table, A is (question-row index)+1, B is (question-row index)+2 etc
-                        correctAnswerIndexes array sets A to 1, B to 2 etc
-                        so index+correctAnswerIndex is the parsed_mcq-index of the correct answer
-                        */
-                        if (rowsMcq[index+correctAnswerIndex].classList.contains('answer'))
-                        {
-                            rowsMcq[index+correctAnswerIndex].children[2].firstElementChild.checked = true;
-                        }
-                        else //error type 1: answer letter not found in question (e.g. 'D' can't be an answer to true/false question)
-                        {
-                            rowAk.className = 'error';
-                        }
+        rowsMcq.forEach(function(rowMcq, qRowId){
+            if (!rowMcq.classList.contains('question')) return;
+
+            if (rowMcq.children[0].textContent == number) //for each Mcq row that has a question, check if it matches the number in the current rawKey
+            {
+                matchCount++;
+                for (let correctAnswer of correctAnswers){
+                    const correctAnswerRowId = qRowId + correctAnswer; //In parsed_mcq, (rowId of C) = (rowId of Q) + 3. In correctAnswers, C = 3
+                    if (!rowsMcq[correctAnswerRowId].classList.contains('answer')){
+                        return setError('letter not in MCQ', rowAk); //e.g. answer D for 'true or false' Q
                     }
+                    rowsMcq[correctAnswerRowId].children[2].firstElementChild.checked = true;
                 }
-            })
-        }
-        else //error type 2: user forgot to include answer letter
-        {
-            rowAk.className = 'error';
-        }
+            }
+        })
 
-        if (matchCount !== 1) //error type 3: question number from answer key not found in parsed_mcq or found more than once
-        {
-            rowAk.className = 'error';
-        }
-
-        if (rowAk.className === 'error') validAk = false;
+        if (matchCount === 0) return setError('# not in MCQ', rowAk);
+        if (matchCount > 1) return setError('duplicate # in MCQ', rowAk);
     })
-    createOutput();
 
-    if (validAk)
+    createOutput();
+    parse_ak_button.innerHTML = validAk ? 'Parse<br>Key' : 'Fix<br>Error';
+
+    function setError(message, rowAk)
     {
-        go_to_step_3_button.style.display = 'block';
-        parse_ak_button.innerHTML = 'Parse<br>Key';
-    }
-    {
-        parse_ak_button.innerHTML = 'Fix<br>Error';
+        rowAk.className = 'error';
+        rowAk.children[2].innerHTML = message;
+        validAk = false;
     }
 }
 
@@ -311,7 +306,7 @@ function shuffle(mode)
     //shuffle sections in the parsed_mcq table, keep question order within each section intact
     function shuffleSections()
     {
-        let sectionsByRow = splitParsedMcqIntoSections();
+        const sectionsByRow = splitParsedMcqIntoSections();
 
         /*lockedIndexes will be an argument in shuffleArray() - locked sections stay in place when rest of sections are shuffled.
         Section indexes are not the same as row indexes - 1st section has index 0, 2nd section has index 1, etc.
@@ -320,7 +315,7 @@ function shuffle(mode)
         /*A section header is the first row of the section,
         i.e. the section not including its empty line(s), question(s), and answers.
         */
-        let sectionHeaders = Array.from(parsed_mcq.getElementsByClassName('section'));
+        const sectionHeaders = Array.from(parsed_mcq.getElementsByClassName('section'));
         sectionHeaders.forEach(function(header,index){
             if (header.children[3].firstElementChild.checked) //user locks a section by checking the lock-column checkbox next to its header
             {
@@ -330,23 +325,19 @@ function shuffle(mode)
 
         shuffleArray(sectionsByRow, lockedIndexes);
         
-        let rows = sectionsByRow.flat(1); //sectionsByRow array has a depth of 1
-
         clear('parsed_mcq');
 
-        rows.forEach(function(row){
-            parsed_mcq.append(row);
-        })
+        const rows = sectionsByRow.flat(1); //sectionsByRow array has a depth of 1
+        for (let row of rows) parsed_mcq.append(row);
 
-        // question #s are out of order because sections were shuffled
-        renumberQuestions();
+        renumberQuestions(); // question #s are out of order because sections were shuffled
         createOutput();
     }
 
     //shuffle questions in the parsed_mcq table within their respective sections, keep answer order within each question intact
     function shuffleQuestions()
     {
-        let sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
+        const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
 
         sectionsByQuestion.forEach(function(section){
             /*lockedIndexes will be an argument in shuffleArray() - locked questions stay in place when rest of questions are shuffled.
@@ -364,26 +355,20 @@ function shuffle(mode)
             shuffleArray(section,lockedIndexes);
         })
 
-        let rows = sectionsByQuestion.flat(2); //sectionsByQuestion has a depth of 2
-
         clear('parsed_mcq');
 
-        rows.forEach(function(row){
-            parsed_mcq.append(row);
-        })
-        
+        const rows = sectionsByQuestion.flat(2); //sectionsByQuestion has a depth of 2
+        for (let row of rows) parsed_mcq.append(row);
+  
         renumberQuestions(); //question #s are out of order because questions were shuffled
         createOutput();
     }
 
     //shuffle answer options in the parsed_mcq table within their respective questions
-    function shuffleAnswers(table){
-        //sectionsByQuestion has a depth of 2 
-        let sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
-        /*tableByQuestion: [[sectionHeader],[question],[question],[sectionHeader],[question]...]
-        each question: [row, row, row...]
-        */
-        let tableByQuestion = sectionsByQuestion.flat(1);
+    function shuffleAnswers(table)
+    {
+        const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions(); //depth = 2
+        const tableByQuestion = sectionsByQuestion.flat(1); //[[S],[Q],[Q],[S],[Q]...] [Q]=[row, row, row...]
 
         tableByQuestion.forEach(function(question){
             if (question[0].classList.contains("section")) return; //skip section headers
@@ -404,68 +389,52 @@ function shuffle(mode)
             shuffleArray(question,lockedIndexes);  
         })
 
-        let rows = tableByQuestion.flat(1);
-
         clear('parsed_mcq');
 
-        rows.forEach(function(row){
-            parsed_mcq.append(row);
-        })
+        const rows = tableByQuestion.flat(1);
+        for (let row of rows) parsed_mcq.append(row);
+
         reletterAnswers(); //answer letter labels are out of order because answers were shuffled
         createOutput();
     }
 
-    /*called by shuffleSections(), shuffleQuestions(),shuffleAnswers()
-    array will be shuffled in place
-    lockedIndexes are indexes or array elements that should not be shuffled
-    lockedIndexes must be in ascending order
-    */
-    function shuffleArray(array, lockedIndexes) {
+    //Shuffle array in place, skipping elements with [lockedIndexes]. [lockedIndexes] must be in ascending order.
+    function shuffleArray(array, lockedIndexes)
+    {
         let unlockedElements = array; //elements in the passed array that should be shuffled
         let lockedElements = []; //elements in the passed array that should not be shuffled
-
-        //add locked elements to the lockedElements array
-        lockedIndexes.forEach(function(item){
-            lockedElements.push(array[item]);
-        })
+        for (let i of lockedIndexes) lockedElements.push(array[i]); //add locked elements to the lockedElements array
 
         //TODO splice returns deleted items, use that to rewrite this code
-        /*remove locked elements from the unlockedElements array
-        loop from end to start. if loop from start to end, indexes will shift when element is deleted
-        */
-        for (let i = lockedIndexes.length-1; i>=0; i--)
+        for (let i = lockedIndexes.length-1; i>=0; i--) //loop from end to start. if loop from start to end, indexes will shift when element is deleted
         {
             let lockedIndex = lockedIndexes[i];
-            unlockedElements.splice(lockedIndex,1);
+            unlockedElements.splice(lockedIndex,1); //remove locked elements from the unlockedElements array
         }
 
-        //shuffle unlockedElements
         for (let i = unlockedElements.length - 1; i > 0; i--)
         {
             const j = Math.floor(Math.random() * (i + 1));
-            [unlockedElements[i], unlockedElements[j]] = [unlockedElements[j], unlockedElements[i]];
+            [unlockedElements[i], unlockedElements[j]] = [unlockedElements[j], unlockedElements[i]]; //shuffle unlockedElements
         }
 
-        //return locked elements back into their original array indexes
         lockedIndexes.forEach(function(item, index){
-            unlockedElements.splice(item,0,lockedElements[index]);
+            unlockedElements.splice(item,0,lockedElements[index]); //return locked elements back into their original array indexes
         })
 
         array = unlockedElements;
     }
 
-    /*called by shuffleSections, splitParsedMcqIntoSectionsIntoQuestions()
-    converts the parsed_mcq table into a nested array with the following structure:
-    parsed_mcq: [[section],[section],[section]...]
-    each section: [row,row,row,row...]
-    */
-    function splitParsedMcqIntoSections(){
-        let rows = Array.from(parsed_mcq.children);
+    //parsed_mcq=[[S],[S],[S]...]   [S]=[row,row,row,row...]
+    function splitParsedMcqIntoSections()
+    {
+        const rows = Array.from(parsed_mcq.children);
         let sectionsByRow = [];
 
         rows.forEach(function(row,index){
             if (index==0) return; //skip table header
-            if (row.classList.contains("section")) //if row is section header, create new section array
+
+            if (row.classList.contains('section')) //if row is section header, create new section array
             {
                 let section = [];
                 section.push(row);
@@ -480,22 +449,16 @@ function shuffle(mode)
         return sectionsByRow;
     }
 
-    /*called by splitParsedMcqIntoSectionsIntoQuestions()
-    converts a flat array of a section with the following structure:
-    section: [row,row,row,row...]
-    into a nested array with the following structure:
-    section: [[header],[question],[question]...]
-    each question: [row,row,row,row...]
-    */
+    //[S]=[row,row,row,row...]   =>   [S]=[[header],[Q],[Q]...] [Q]=[row,row,row,row...]
     function splitIntoQuestions(section)
     {
         let questions = [];
-
-        let sectionHeader=[section[0],section[1]]; //sectionHeader array is the section header row and the subsequent empty row
+        const sectionHeader = [section[0],section[1]]; //[header, emptyrow]
         questions.push(sectionHeader);
 
         section.forEach(function(row, index){
             if (index==0 || index==1) return; //skip sectionHeader
+
             if (row.classList.contains('question')) //if row is a question, create new question array
             {
                 let question = [];
@@ -504,19 +467,15 @@ function shuffle(mode)
             }
             else //if row is an answer/empty line, add it to the current question array
             {
-                let currentQuestionIndex = questions.length-1;
+                const currentQuestionIndex = questions.length-1;
                 questions[currentQuestionIndex].push(row);
             }
         })
+
         return questions;
     }
 
-    /*called by shuffleQuestions(), shuffleAnswers()
-    converts the parsed_mcq table into a nested array with the following structure:
-    parsed_mcq: [[section],[section],[section]...]
-    each section: [[header],[question],[question]...]
-    each question: [row,row,row,row...]
-    */
+    //parced_mcq=[[S],[S],[S]...]  [S]=[[header],[Q],[Q]...]  [Q]=[row,row,row,row...]
     function splitParsedMcqIntoSectionsIntoQuestions()
     {
         let sectionsByRow = splitParsedMcqIntoSections();
@@ -528,10 +487,8 @@ function shuffle(mode)
         return sectionsByQuestion;
     }
 
-    /*called by shuffleSections(), shuffleQuestions()
-    overwrites questions #s in the label column with 1,2,3...n
-    */
-    function renumberQuestions ()
+    //overwrite questions #s in the label column with 1,2,3...n
+    function renumberQuestions()
     {
         let questionRows = Array.from(parsed_mcq.getElementsByClassName('question'));
         questionRows.forEach(function(item,index){
@@ -539,14 +496,11 @@ function shuffle(mode)
         })
     }
 
-    /*called by shuffleAnswers()
-    overwrites letter label for first answer under each question with 'A',
-    second letter label under each question with 'B' etc.
-    */
+    //overwrite letter label for first answer under each question with 'A', second letter label with 'B' etc.
     function reletterAnswers()
     {
-        let questionRows = parsed_mcq.getElementsByClassName('question');
-        let letters = ['A', 'B', 'C', 'D', 'E'];
+        const questionRows = parsed_mcq.getElementsByClassName('question');
+        const letters = ['A', 'B', 'C', 'D', 'E'];
 
         for (let row of questionRows)
         {
@@ -572,7 +526,7 @@ function createOutput()
 {
     output.innerHTML = ''; //clear output
     let rows = Array.from(parsed_mcq.children);
-    let answerKey = '<p id="output_ak">Output Answer Key</p>';
+    let answerKey = '<p id="output_ak">Answer Key</p>';
     let copyButton = '<button onclick="copyOutput()">Copy Output</button>'
 
     output.insertAdjacentHTML('beforeend', copyButton+'<br><br>');
@@ -654,94 +608,170 @@ function clear(table_name){
                                         '<th style="width:4ch">key</th>'+
                                         '<th style="width:4ch">lock</th>'+
                                     '</tr>'+
-                                '</table>'
+                                '</table>';
+        border_mimic.style.display = 'none';
+        user_guide.style.display = 'none';
     }
 
-    if (table_name = 'parsed_ak')
+    if (table_name === 'parsed_ak')
     {
         parsed_ak.outerHTML = '<table id="parsed_ak">'+
                                     '<tr>'+
-                                        '<th style="width:4ch">q</th>'+
-                                        '<th style="width:4ch">a</th>'+
+                                        '<th>q</th>'+
+                                        '<th>a</th>'+
+                                        '<th></th>'+
                                     '</tr>'+
                                 '</table>'
     }
 }
 
-function toggleSampleMcq(){
-    let sampleMcq = 
-    'Click here, then click outside of this text area to begin processing these sample MCQs.\n'+
-    'The questions in this first section\n'+
-    '     refer to Star Wars.\n'+
+function enterSampleMcq(){
+    const sample1 = 
+    'The questions in this section refer to Star Wars.\n'+
+    '\n'+
+    '(1) Darth Vader would enjoy a long walk on the beach. \n'+
+    'A. true\n'+
+    'B. false\n'+
+    '\n'+
+    '(2) Select all characters who were secretly Sith Lords.  \n'+
+    'A. Chancellor Palpatine\n'+
+    'B. Mace Windu\n'+
+    'C. Chancellor Valorum\n'+
+    'D. Jar Jar Binks\n'+
+    '\n'+
+    'The questions in this section refer to the Simpsons.\n'+
+    '\n'+
+    '(4) Who shot Mr. Burns?\n'+
+    'A. Lisa\n'+
+    'B. Marge\n'+
+    'C. Bart\n'+
+    'D Homer\n'+
+    'E. Maggie\n'+
+    '\n'+
+    '(5) Which of the following characters is left-handed?\n'+
+    'A. Seymour Skinner\n'+
+    'B. Ned Flanders\n'+
+    'C. Moe Szyslak\n'+
+    'D. all of the above\n';
+
+    const sample2 = 
+    'The questions in this section\n'+
+    '     refer to <span style="color:red">Star Wars</span>.\n'+
     '    \n'+
-    '1. Darth Vader would enjoy a long walk on the beach. \n'+
+    '1. Darth Vader would \n'+
+    'enjoy a long walk on the beach. \n'+
     '     a) true\n     '+
     ' B. false\n'+
     '    \n'+
-    '3)  Select <u><b><i>all</i></b></u> characters who were secretly Sith Lords.  \n'+
+    '2)  Select <u><b><i>all</i></b></u> characters who were secretly Sith Lords.  \n'+
+    '    (A Chancellor\n'+
+    'Palpatine\n'+
+    '      b.    Mace Windu\n'+
+    '.C.  Chancellor Valorum\n'+
+    'd. Jar Jar Binks\n'+
+    '\n'+
+    '2)  [This will create error in answer key] Select <u><b><i>all</i></b></u> characters who were secretly Sith Lords.  \n'+
     '    (A Chancellor Palpatine\n'+
     '      b.    Mace Windu\n'+
     '.C.  Chancellor Valorum\n'+
     'd. Jar Jar Binks\n'+
     '\n'+
-    '  The questions in Section 3 refer to the Simpsons.\n'+
+    '  The questions in this section refer to the Simpsons.\n'+
     '\n'+
     ' \n'+
-    '      5 <p>Who shot Mr. Burns?</p> <img src="https://upload.wikimedia.org/wikipedia/en/5/56/Mr_Burns.png" style="max-width:50%; max-height:50%; width:90px; height:150px">  \n'+
+    '      4 <p>Who shot Mr. Burns?</p> <img src="https://upload.wikimedia.org/wikipedia/en/5/56/Mr_Burns.png" style="max-width:50%; max-height:50%; width:90px; height:150px">  \n'+
     '    a. Lisa\n'+
     'b Marge\n'+
     'c. Bart\n'+
     'D Homer\n'+
     '(E.) Maggie\n'+
     '        \n'+
-    '(6) Which of the following characters<br>is left-handed?\n'+
+    '(5) Which of the following characters<br><br>is left-handed?\n'+
     '    a Seymour Skinner\n'+
     ' B Ned Flanders\n'+
     ' c) Moe Szyslak\n'+
-    'D all of the above\n'
+    'D all of the above\n';
 
-    if (sample_mcq_button.innerHTML === 'Enter sample MCQ')
-    { 
-        input_mcq.value = sampleMcq;
-        sample_mcq_button.innerHTML = 'Remove sample MCQ';
-    }
-    else
-    {
-        input_mcq.value = '';
-        sample_mcq_button.innerHTML = 'Enter sample MCQ';
-    }
+    const sample3 = 
+    'The questions in this section refer to Star Wars.\n'+
+    '\n'+
+    '(1) Darth Vader would enjoy a long walk on the beach. \n'+
+    'B. true\n'+
+    'B. false\n'+
+    '\n'+
+    '(2) Select all characters who were secretly Sith Lords.  \n'+
+    'A. Chancellor Palpatine\n'+
+    'B. Mace Windu\n'+
+    'D. Chancellor Valorum\n'+
+    'C. Jar Jar Binks\n'+
+    '\n'+
+    'The questions in this section refer to the Simpsons.\n'+
+    '\n'+
+    '\n'+
+    '(3) Question with error\n'+
+    'A. only one answer option\n'+
+    '(4) Who shot Mr. Burns?\n'+
+    'A. Lisa\n'+
+    'B. Marge\n'+
+    'C. Bart\n'+
+    'D Homer\n'+
+    'E. Maggie\n'+
+    '\n'+
+    '(5) Which of the following characters is left-handed?\n'+
+    'A. Seymour Skinner\n'+
+    'B. Ned Flanders\n'+
+    'C. Moe Szyslak\n'+
+    'D. all of the above\n';
+
+    if (sample_mcq.value == 0) input_mcq.value = '';
+    if (sample_mcq.value == 1) input_mcq.value = sample1;
+    if (sample_mcq.value == 2) input_mcq.value = sample2;
+    if (sample_mcq.value == 3) input_mcq.value = sample3;
 }
 
-function toggleSampleAk()
+function enterSampleAk()
 {
-    let sampleAk = 'Click here, then click outside of this text area to begin processing this sample answer key.\n'+
-    '1 bd5 e\n'+
-    '   3. a,,d \n'+
-    '22 is fa\n'+
-    '6====    \n'
+    const sample1 =
+    '1. B\n'+
+    '2. AC\n'+
+    '4. E\n'+
+    '5. B\n';
 
-    if (sample_ak_button.innerHTML === 'Enter sample answer key')
-    { 
-        input_ak.value = sampleAk;
-        sample_ak_button.innerHTML = 'Remove sample answer key';
-    }
-    else
-    {
-        input_ak.value = '';
-        sample_ak_button.innerHTML = 'Enter sample answer key';
-    }
+    const sample2 =
+    '1 b2 a,c\n'+
+    '   4. E \n'+
+    '5 is B\n';
+
+    const sample3 =
+    '1. C\n'+
+    '2. AC\n'+
+    '4. \n'+
+    '5. F\n'+
+    '10. B\n'+
+    '2. B\n';
+
+    if (sample_ak.value == 0) input_ak.value = '';
+    if (sample_ak.value == 1) input_ak.value = sample1;
+    if (sample_ak.value == 2) input_ak.value = sample2;
+    if (sample_ak.value == 3) input_ak.value = sample3;
 }
 
-function toggle(element, display='block')
+function toggle(element, display='block', hide=true)
 {
-    if(window.getComputedStyle(element).display === 'none')
+    if (element == parsed_mcq) return; //toggle user_guide instead
+
+    if(window.getComputedStyle(element).display == 'none')
     {
         element.style.display = display;
     }
-    else
+    else if(hide)
     {
         element.style.display = 'none';
     }
+
+    if(window.getComputedStyle(user_guide).display == 'none') parsed_mcq.style.display = 'table';
+    if(window.getComputedStyle(user_guide).display == 'block') parsed_mcq.style.display = 'none';
+    if (element == user_guide) toggle (border_mimic, 'block', hide);
 }
 
 function goToStep(step){
@@ -764,6 +794,7 @@ function goToStep(step){
         input_mcq_div.style.display = 'block';
         input_mcq_div_nav.classList.add('active');
         parse_mcq_button.style.display = 'block';
+        input_mcq.select();
     }
 
     if (step === 2)
@@ -771,8 +802,9 @@ function goToStep(step){
         ak_div.style.display = 'grid';
         ak_div_nav.classList.add('active');
         parse_ak_button.style.display = 'block';
+        go_to_step_3_button.style.display = 'block';
+        input_ak.select();
     }
-
     if (step === 3)
     {
         output_div.style.display = 'block';
@@ -783,24 +815,40 @@ function goToStep(step){
     }
 }
 
-//Show error message to users with IE browsers
-function detectIE()
-{
-    let ie10andbelow = window.navigator.userAgent.indexOf('MSIE') != -1;
-    let ie11andabove = window.navigator.userAgent.indexOf('Trident') != -1;
-    let browserError ='<p id="browserError">This website does not work with Internet Explorer 11 or older.<br>Get a better browser.</p>';
-    if (ie10andbelow || ie11andabove)
-    {
-        document.body.innerHTML += browserError;
-    }
-}
-detectIE();//Run when page is loaded.
+function highlightVocab(){
+    const allElements = document.querySelectorAll('#vocab_div *');
+    for (let e of allElements) e.classList.remove('vocab_highlight');
 
-function test(){
-    setTimeout(() => sample_mcq_button.click(), 3000);
+    const selectedElements = document.getElementsByClassName(vocab.value);
+    for (let element of selectedElements) element.classList.add('vocab_highlight');
+}
+
+function selectVocab(target){
+    vocab.value = target;
+    highlightVocab();
+}
+
+function clearValue(input){
+    document.getElementById(input).value = '';
+}
+
+//Show error message to users with IE browsers
+(function detectIE()
+{
+    const ua = window.navigator.userAgent;
+    const ie10andbelow = ua.indexOf('MSIE') != -1; // ua.match(/MSIE/i);
+    const ie11andabove = ua.indexOf('Trident') != -1;
+    const browserError = '<p id="browserError">This website does not work with Internet Explorer 11 or older.<br>Get a better browser.</p>';
+    if (ie10andbelow || ie11andabove) return document.body.innerHTML += browserError;
+})(); //Run when page is loaded.
+
+function test(mode=1){
+    setTimeout(() => sample_mcq.value = mode, 3000);
+    setTimeout(() => sample_mcq.onchange(), 4000);
     setTimeout(() => parse_mcq_button.click(), 6000);
     setTimeout(() => go_to_step_2_button.click(), 9000);
-    setTimeout(() => sample_ak_button.click(), 12000);
+    setTimeout(() => sample_ak.value = mode, 12000);
+    setTimeout(() => sample_ak.onchange(), 13000);
     setTimeout(() => parse_ak_button.click(), 15000);
     setTimeout(() => go_to_step_3_button.click(), 18000);
     setTimeout(() => shuffle_sections_button.click(), 21000);
