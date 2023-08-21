@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 
@@ -5,7 +6,23 @@
     <title>Shuffle MCQ</title>
     <link rel="stylesheet" href="style.css">
     <link rel='icon' href='favicon.ico' type='image/x-icon'/>
+    <meta property="og:url" content="http://shufflemcq.com" />
+    <meta property="og:title" content="Shuffle MCQ" />
+    <meta property="og:description" content="a tool for creating multiple versions of the same quiz" />
+    <meta property="og:image" content="http://www.shufflemcq.com/logo.jpeg" />
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="627">
 </head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XNV0FRE3GM"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XNV0FRE3GM');
+</script>
 
 <body>
     <div id="left_div">
@@ -16,7 +33,7 @@
         </ul>
         <div id="input_mcq_div" class="step">
             <div class="settings">
-                <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_mcq_div); toggle(input_format);">
+                <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_mcq_div); toggle(input_format, 'flex');">
                 <div id="sample_mcq_div"><span>
                     <label for="sample_mcq"><b>Populate text area below with</b> </label>
                     <select name="sample_mcq" id="sample_mcq" onchange="enterSampleMcq()">
@@ -27,16 +44,47 @@
                     </select>
                     <b>sample MCQs</b>
                 </span></div>
-                <div id="input_format">
-                    <span>
-                        <b>Allowed label characters:</b>
-                        <input type="text" size="6" id="label_chars" value="().">
-                        (see <span onclick="toggle(user_guide, 'block', false)"><a href="#ug_label_format">User Guide</a></span>)
-                    </span>
+                <div id="input_format" style="flex-wrap: wrap; align-items: center;">
+                    <p style="width:100%"><b>Question <span onclick="toggle(user_guide, 'block', false)"><a href="#ug_label_format">format</a></span></b></p>
+                    <div class="label_div">
+                        <table class="label_table" id="q_prefix">
+                            <tr id="qp_r0"> <td><input type="text" size="6" value="&mldr;("></td> <td></td> </tr>
+                            <tr id="qp_r1"> <td><input type="text" size="6" value="&mldr;"></td>  <td onclick="q_prefix.firstElementChild.removeChild(qp_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr> <td colspan="2" onclick="addRow(q_prefix)"> + </td> </tr>
+                        </table>
+                        <div>&nbsp;+&nbsp;Q&nbsp;number&nbsp;+&nbsp;</div>
+                    </div>
+                    <div class="label_div">
+                        <table class="label_table" id="q_postfix">
+                            <tr id="qs_r0"> <td><input type="text" size="6" value=")&bull;"></td> <td></td> </tr>
+                            <tr id="qs_r1"> <td><input type="text" size="6" value=".&bull;"></td> <td onclick="q_postfix.firstElementChild.removeChild(qs_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr id="qs_r2"> <td><input type="text" size="6" value="&bull;"></td>  <td onclick="q_postfix.firstElementChild.removeChild(qs_r2)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr> <td colspan="2" onclick="addRow(q_postfix)"> + </td> </tr>
+                        </table>
+                        <div>&nbsp;+&nbsp;Q&nbsp;text</div>
+                    </div>
+                    <p style="width:100%"><b>Answer <span onclick="toggle(user_guide, 'block', false)"><a href="#ug_label_format">format</a></span></b></p>
+                    <div class="label_div">
+                        <table class="label_table" id="a_prefix">
+                            <tr id="ap_r0"> <td><input type="text" size="6" value="&crarr;&mldr;("></td> <td></td> </tr>
+                            <tr id="ap_r1"> <td><input type="text" size="6" value="&crarr;&mldr;"></td>  <td onclick="a_prefix.firstElementChild.removeChild(ap_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr> <td colspan="2" onclick="addRow(a_prefix)"> + </td></tr>
+                        </table>
+                        <div>&nbsp;+&nbsp;A&nbsp;letter&nbsp; + &nbsp;</div>
+                    </div>
+                    <div class="label_div">
+                        <table class="label_table" id="a_postfix">
+                            <tr id="as_r0"> <td><input type="text" size="6" value=")&bull;"></td> <td></td> </tr>
+                            <tr id="as_r1"> <td><input type="text" size="6" value=".&bull;"></td> <td onclick="a_postfix.firstElementChild.removeChild(as_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr id="as_r2"> <td><input type="text" size="6" value="&bull;"></td>  <td onclick="a_postfix.firstElementChild.removeChild(as_r2)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr> <td colspan="2" onclick="addRow(a_postfix)"> + </td> </tr>
+                        </table>
+                        <div>&nbsp;+&nbsp;A&nbsp;text</div>
+                    </div>
                 </div>
             </div>
             <textarea id="input_mcq" rows="100" placeholder=
-                "Paste your multiple-choice questions here, then click 'Parse MCQ'."
+                "Paste your multiple-choice questions here, then click 'Parse MCQ'.&#13;Each question must be separated from the next question by an empty line."
             ></textarea> 
         </div>
 
@@ -68,41 +116,49 @@
 
         <div id="output_div" class="step">
             <div class="settings">
-                <img src="gear-solid.svg" alt="settings" class="settings_gear" id="output_settings_gear" onclick="toggle(output_format)">
+                <img src="gear-solid.svg" alt="settings" class="settings_gear" id="output_settings_gear" onclick="toggle(output_format); toggle(renumber_questions_div);">
+                <div id="renumber_questions_div">
+                    <button id="renumber_questions" onclick="renumberQuestions()">Renumber questions without shuffling</button>
+                </div>
                 <div id="output_format">
-                    <span>Question format = </span>
+                    <p><b>Question format</b></p>
                     <input type="text" size="6" list="dl_before_q" id="before_q" value="" onblur="createOutput()" onfocus="clearValue('before_q')">
                     <datalist id="dl_before_q">
                         <option value="(">
                         <option value="&nbsp;">
-                        <option value="<b>">
                     </datalist>
-                    <span>+ Q number + </span>
+                    <span>+ Q&nbsp;number + </span>
                     <input type="text" size="6" list="dl_after_q" id="after_q" value=". " onblur="createOutput()" onfocus="clearValue('after_q')">
                     <datalist id="dl_after_q">
                         <option value=". ">
                         <option value=") ">
                         <option value="&nbsp;">
-                        <option value="</b> ">
+                        <option value="&#8677;">
                     </datalist>
-                    <span>+ A text</span>
+                    <span>+ Q&nbsp;text</span>
                     <br><br>
-                    <span>Answer format = </span>
+                    <p><b>Answer format</b></p>
                     <input type="text" size="6" list="dl_before_a" id="before_a" value="" onblur="createOutput()" onfocus="clearValue('before_a')">
                     <datalist id="dl_before_a">
                         <option value="(">
                         <option value="&nbsp;">
-                        <option value="<span style='text-transform: lowercase;'>">
+                        <option value="<b>">
                     </datalist>
-                    <span>+ A letter + </span>
+                    <span> + </span>
+                    <select name="a_case" id="a_lowercase" onchange="createOutput()">
+                        <option value="">ABCDE</option>
+                        <option value="true">abcde</option>
+                    </select>
+                    <span> + </span>
                     <input type="text" size="6" list="dl_after_a" id="after_a" value=". " onblur="createOutput()" onfocus="clearValue('after_a')">
                     <datalist id="dl_after_a">
                         <option value=". ">
                         <option value=") ">
                         <option value="&nbsp;">
-                        <option value="</span> ">
+                        <option value="&#8677;">
+                        <option value="</b> ">
                     </datalist>
-                    <span>+ A text</span>
+                    <span>+ A&nbsp;text</span>
                     <br><br>
                 </div>
             </div>
@@ -123,7 +179,7 @@
     <div id="right_div">
 
         <div class="header">
-            <button id="user_guide_button" onclick="toggle(user_guide)">?</button>
+            <button id="user_guide_button" onclick="toggle(user_guide)">&#10005;</button>
             <img id="youtube" src="youtube-logo.svg">
             <div id="border_mimic"></div>
         </div>
@@ -136,11 +192,9 @@
             <h1 id="ug_toc"><span>Table of Contents</span></h1>
                 <div id="toc">
                     <ul>
-                        <li><a href="#ug_vocab"><b>Vocab</b></a></li>
                         <li><a href="#ug_step_1"><b>Step 1: Enter your MCQs</b></a></li>
                             <ul>
                                 <li><a href="#ug_input_mcq_format">Input MCQ Format</a></li>
-                                <li><a href="#ug_question_block_format">Question Block Format</a></li>
                                 <li><a href="#ug_label_format">Label Format</a></li>
                                 <li><a href="#ug_validation">Validation</a></li>
                             </ul>
@@ -157,82 +211,36 @@
                                 <li><a href="#ug_lock">Lock</a></li>
                                 <li><a href="#ug_output">Output</a></li>
                             </ul>
+                        <li><a href="#ug_vocab"><b>Vocab</b></a></li>
                     </ul>
-                </div>
-            <h1 id="ug_vocab"><span>Vocab</span></h1>
-                <div id="vocab_div">
-                    <select name="vocab" id="vocab" onchange="highlightVocab()" size="11">
-                        <option value="v_block" selected>block</option>
-                        <option value="v_section_header">section header</option>
-                        <option value="v_question_block">question block</option>
-                        <option value="v_emptyline">emptyline</option>
-                        <option value="v_section">section</option>
-                        <option value="v_question">question</option>
-                        <option value="v_answer">answer</option>
-                        <option value="v_label">label</option>
-                        <option value="v_label_space">label space</option>
-                        <option value="v_linebreak">linebreak</option>
-                        <option value="NONE">NONE</option>
-                    </select>
-                    <div class="v_mcq">
-                        <div class="v_section">
-                            <div class="v_block v_section_header vocab_highlight">Section header text</div><div class="v_linebreak"></div>
-                            <div class="v_emptyline"><br></div><div class="v_linebreak"></div>
-                            <div class="v_block v_question_block vocab_highlight">
-                                <div class="v_question"><span class="v_label">1.</span><span class="v_label_space"> </span>Question text</div><div class="v_linebreak"></div>
-                                <div class="v_answer"><span class="v_label">A.</span><span class="v_label_space"> </span>Answer choice text</div><div class="v_linebreak"></div>
-                                <div class="v_answer"><span class="v_label">B.</span><span class="v_label_space"> </span>Answer choice text</div><div class="v_linebreak"></div>
-                                <div class="v_answer"><span class="v_label">C.</span><span class="v_label_space"> </span>Answer choice text</div><div class="v_linebreak"></div>
-                                <div class="v_answer"><span class="v_label">D.</span><span class="v_label_space"> </span>Answer choice text</div><div class="v_linebreak"></div>
-                            </div><div class="v_linebreak"></div>
-                            <div class="v_emptyline"><br></div><div class="v_linebreak"></div>
-                            <div class="v_block v_question_block vocab_highlight"><div class="v_linebreak"></div>
-                            <div class="v_question"><span class="v_label">2.</span><span class="v_label_space">&nbsp;&nbsp;&nbsp;</span>Question text</div><div class="v_linebreak"></div>
-                            <div class="v_answer"><span class="v_label">A.</span><span class="v_label_space">&Tab;</span>Answer choice text</div><div class="v_linebreak"></div>
-                                <div class="v_answer"><span class="v_label_space">&nbsp;&nbsp;&nbsp;</span><span class="v_label">B.</span><span class="v_label_space"> </span>Answer choice text</div><div class="v_linebreak"></div>
-                            </div><div class="v_linebreak"></div>
-                        </div><div class="v_linebreak"></div>
-                        <div class="v_emptyline"><br></div><div class="v_linebreak"></div>
-                        <div class="v_section"><div class="v_linebreak"></div>
-                            <div class="v_block v_section_header vocab_highlight">Section header text</div><div class="v_linebreak"></div>
-                            <div class="v_emptyline"><br></div><div class="v_linebreak"></div>
-                            <div class="v_block v_question_block vocab_highlight"><div class="v_linebreak"></div>
-                            <div class="v_question"><span class="v_label">3.</span><span class="v_label_space"> </span>Question text</div><div class="v_linebreak"></div>
-                            <div class="v_answer"><span class="v_label">A.</span><span class="v_label_space"> </span>Answer choice text</div><div class="v_linebreak"></div>
-                                <div class="v_answer"><span class="v_label">B.</span><span class="v_label_space"> </span>Answer choice text</div><div class="v_linebreak"></div>
-                                <div class="v_answer"><span class="v_label">C.</span><span class="v_label_space"> </span>Answer choice text</div><div class="v_linebreak"></div>
-                                <div class="v_answer"><span class="v_label">D.</span><span class="v_label_space"> </span>Answer choice text</div><div class="v_linebreak"></div>
-                                <div class="v_answer"><span class="v_label">E.</span><span class="v_label_space"> </span>Answer choice text</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             <h1 id="ug_step_1"><span>Step 1: Enter your MCQs</span></h1>        
                 <p>Paste the entire text<sup onclick="toggle(ug_note_1)" class="asterisk">*</sup> of your quiz into the <span onclick="goToStep(1)" class="link_mimic">Input MCQ text area</span>.</p>
                 <p id="ug_note_1" class="note">
                     All pasted text will become plain text. If you need to preserve some formatting, you can add it manually with HTML. To view an example, open 
-                    <span onclick="goToStep(1); toggle(input_format, 'block', false); toggle(sample_mcq_div, 'block', false);"><span class="link_mimic">Input&nbsp;MCQ&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>
+                    <span onclick="goToStep(1); toggle(sample_mcq_div, 'block', false); toggle(input_format, 'flex', false);"><span class="link_mimic">Input&nbsp;MCQ&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>
                     and select <b>Populate text area below with</b> <span style="border: 1px solid black; padding: 1px; background-color: white">irregular&nbsp;format&nbsp;<sup>&#9013;</sup></span> <b>sample MCQs</b>.
                     <br> <br>If your MCQ is copied from a Google Doc, and your questions are formatted as <a href="https://support.google.com/docs/answer/3300615" target="_blank">Numbered&nbsp;list</a>&nbsp;<img src="numbered-list.png" id="numbered_list">, the question numbers will not be preserved in plain text. To fix this, download your Google Doc as a Word Doc or a PDF, then copy the MCQ from there.
                 </p>
-                <h2 id="ug_input_mcq_format" >Input MCQ Format</h2>                
+                <h2 id="ug_input_mcq_format" >Input MCQ Format</h2>
                     <p>The text consists of section header blocks and question blocks.</p>
-                    <h3 onclick="selectVocab('v_emptyline')"><a href="#ug_vocab">Emptyline</a></h3>
+                    <h3 onclick="highlightVocab('v_emptyline')"><a href="#ug_vocab">Emptyline</a></h3>
                         <ul>
                             <li>Each block must be separated from the next block by an emptyline.</li>
                             <li>An emptyline may include spaces or tabs, but no other text.</li>
                             <li>You can create an emptyline by pressing the <kbd>enter</kbd> or <kbd>return</kbd> key twice.</li>
                         </ul>      
-                    <h3 onclick="selectVocab('v_section_header')"><a href="#ug_vocab">Section header</a></h3>
+                    <h3 onclick="highlightVocab('v_section_header')"><a href="#ug_vocab">Section header</a></h3>
                         <ul>
-                            <li>A <span onclick="selectVocab('v_section')"><a href="#ug_vocab">section</a></span> consists of one or more questions. A section header contains instructions for that set of questions.</li>
+                            <li>A <span onclick="highlightVocab('v_section')"><a href="#ug_vocab">section</a></span> consists of one or more questions. A section header contains instructions for that set of questions.</li>
                             <li>May not begin with a number (or it could be mistaken for a question block).</li>
                             <li>If you don't have section headers, the entire input will be treated as one section.</li>
                         </ul>
-                    <h3 onclick="selectVocab('v_question_block')"><a href="#ug_vocab">Question block</a></h3>
+                    <h3 onclick="highlightVocab('v_question_block')"><a href="#ug_vocab">Question block</a></h3>
                         <ul>
-                            <li>Consists of a question followed by its answer choices.</li>
-                            <li>Must begin with the question number (see <a href="#ug_label_format">Label Format</a>).</li>
+                            <li>Must consist of 1 question followed by between 2 and 5 answer choices.</li>
+                            <li>Must begin with the <a href="#ug_label_format">question number</a>.</li>
+                            <li>Each answer must begin with the <a href="#ug_label_format">answer letter</a>.</li>
                             <li>
                                 Emptylines are not allowed<sup onclick="toggle(ug_note_2)" class="asterisk">*</sup> in the middle of a question block.
                                 <div id="ug_note_2" class="note">
@@ -247,38 +255,52 @@
                                             <td>line&nbsp;1<br><br>line&nbsp;2</td>
                                         </tr>
                                     </table>
-                                                                        
                                 </div>
                             </li>
                         </ul>
-                <h2 id="ug_question_block_format">Question Block Format</h2>
-                    <p>A <span onclick="selectVocab('v_question_block')"><a href="#ug_vocab">question block</a></span> must consist of 1 question followed by between 2 and 5 answer choices.</p>
-                    <p>Each <span onclick="selectVocab('v_answer')"><a href="#ug_vocab">answer</a></span> must be separated from the preceding answer (or question) by a <span onclick="selectVocab('v_linebreak')"><a href="#ug_vocab">linebreak</a></span>. You can create a linebreak by pressing the <kbd>enter</kbd> or <kbd>return</kbd> key once.</p>
-                    <p>Each answer must begin with the answer letter (see <a href="#ug_label_format">Label Format</a>).</p>
                 <h2 id="ug_label_format">Label Format</h2>
-                    <p>A question <span onclick="selectVocab('v_label')"><a href="#ug_vocab">label</a></span> can be any number between 0 and 999.</p>
-                    <p>An answer <span onclick="selectVocab('v_label')"><a href="#ug_vocab">label</a></span> is A, B, C, D, or E (lower-case is allowed).</p>
-                    <h3 onclick="selectVocab('v_label_space')"><a href="#ug_vocab">Label space</a></h3>
-                        <ul>
-                            <li>A space between the label and the rest of the question/answer text is required.</li>
-                            <li>Spaces before the label are allowed (see <span onclick="selectVocab('v_label_space')"><a href="#ug_vocab">2.B</a></span>).</li>
-                            <li>You can create a space by pressing the <kbd>spacebar</kbd> or the <kbd>tab</kbd> key.</li>
-                        </ul>
-                    <h3><u>Allowed label characters</u></h3>
-                        <ul>
-                            <li>
-                                Labels may include periods or parentheses, e.g.
-                                <span class="highlight">1</span><span class="highlight">0</span><span class="highlight">.</span><span class="highlight">&nbsp;</span> or
-                                <span class="highlight">&nbsp;</span><span class="highlight">b</span><span class="highlight">)</span><span class="highlight">&nbsp;</span> or
-                                <span class="highlight">(</span><span class="highlight">D</span><span class="highlight">.</span><span class="highlight">)</span><span class="highlight">&nbsp;</span>
-                            </li>
-                            <li>If your MCQ labels use different characters, configure them in the <span onclick="goToStep(1); toggle(input_format, 'block', false); toggle(sample_mcq_div, 'block', false);"><span class="link_mimic">Input&nbsp;MCQ&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span></li>
-                        </ul>
+                    <p>A question <span onclick="highlightVocab('v_label')"><a href="#ug_vocab">label</a></span> can be any number between 0 and 999.</p>
+                    <p style="margin-bottom:10px">An answer <span onclick="highlightVocab('v_label')"><a href="#ug_vocab">label</a></span> is A, B, C, D, or E (lower-case is allowed).</p>
+                    <p>Each label is preceded by a <span onclick="highlightVocab('v_prefix')"><a href="#ug_vocab">prefix</a></span> and followed by a <span onclick="highlightVocab('v_postfix')"><a href="#ug_vocab">postfix</a></span>, as defined by the <span onclick="goToStep(1); toggle(sample_mcq_div, 'block', false); toggle(input_format, 'flex', false);"><span class="link_mimic">Input&nbsp;MCQ&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span></p>
+                    <div style="display:flex; margin-top: 5px;">
+                        <table class="label_table" id="ug_label_table" style="display:inline-block">
+                            <tr id="ug_r0"> <td><input type="text" size="6" value=") "></td> <td></td> </tr>
+                            <tr id="ug_r1"> <td><input type="text" size="6" value=". "></td>  <td onclick="ug_label_table.firstElementChild.removeChild(ug_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr id="ug_r1"> <td><input type="text" size="6" value=" "></td>  <td onclick="ug_label_table.firstElementChild.removeChild(ug_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr> <td colspan="2" onclick="addRow(ug_label_table)"> + </td> </tr>
+                        </table>
+                        <div>
+                            <p style="padding-left:10px">Each row defines one allowed prefix or postfix.</p>
+                            <div style="height:1ch"></div>
+                            <p style="padding-left:10px">If your quiz uses a different format, click <span style="background-color: rgb(70, 70, 70);color: white;font-weight: bold;">&nbsp;+&nbsp;</span> in the settings and type in your own format in the new row.</p>
+                        </div>
+                    </div>
+                    <div style="display:flex; margin-top: 5px;">
+                        <table id="ug_special_chars" style="flex:1">
+                            <tr>
+                                <td>&crarr;</td>
+                                <td><span onclick="highlightVocab('v_linebreak')"><a href="#ug_vocab">linebreak</a></span></td>
+                            </tr>
+                            <tr>
+                                <td>&bull;</td>
+                                <td>one space or tab</td>
+                            </tr>
+                            <tr>
+                                <td>&mldr;</td>
+                                <td>zero or more consecutive spaces/tabs</td>
+                            </tr>
+                            <tr>
+                                <td>&#8677;</td>
+                                <td>tab</td>
+                            </tr>
+                        </table>
+                        <p style="flex:1; padding-left:10px">If needed, copy a special character from this table and paste it into the settings.</p>
+                    </div>
                 <h2 id="ug_validation">Validation</h2>
                     <p>After you input your MCQ and click <button class="middle_div_button_mimic">Parse<br>MCQ</button>, the Parsed MCQ table will appear on the right.</p>
                     <p><img src="parsed-mcq-sample.png" id="parsed_mcq_sample"></p>
                     <p>Visually scan the table to verify that it matches what you intended to enter.</p>
-                    <p>If you find any errors, go back to the <span onclick="goToStep(1)" class="link_mimic">Input MCQ text area</span> to fix them, then parse the MCQ again.</p>
+                    <p>If you find any errors, go back to the Input MCQ <span onclick="goToStep(1)" class="link_mimic">text area</span> or <span onclick="goToStep(1); toggle(sample_mcq_div, 'block', false); toggle(input_format, 'flex', false);"> <span class="link_mimic">settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span> to fix them, then parse the MCQ again.</p>
             <h1 id="ug_step_2"><span>Step 2: Enter your Answer Key</span></h1>
                 <h2 id="ug_manual_entry">Manual Entry</h2>
                     <p>In the KEY column of the <a href="#ug_validation">Parsed MCQ table</a>, mark the checkbox next to the correct answer for each question. Multiple answers per question are allowed.</p>
@@ -289,21 +311,21 @@
             <h1 id="ug_step_3"><span>Step 3: Shuffle!</span></h1>
                 <h2 id="ug_shuffle_sections">Shuffle Sections</h2>
                     <ul>
-                        <li>Shuffle <span onclick="selectVocab('v_section')"><a href="#ug_vocab">sections</a></span> within the MCQ.</li>
+                        <li>Shuffle <span onclick="highlightVocab('v_section')"><a href="#ug_vocab">sections</a></span> within the MCQ.</li>
                         <li>Questions will be renumbered.</li>
                         <li>Order of questions within each section will not change.</li>
                         <li>Order of answers within each question block will not change.</li>
                     </ul>
                 <h2 id="ug_shuffle_questions">Shuffle Questions</h2>
                     <ul>
-                        <li>Shuffle <span onclick="selectVocab('v_question_block')"><a href="#ug_vocab">question blocks</a></span> within each section.</li>
+                        <li>Shuffle <span onclick="highlightVocab('v_question_block')"><a href="#ug_vocab">question blocks</a></span> within each section.</li>
                         <li>Questions will be renumbered.</li>
                         <li>Order of sections within the MCQ will not change.</li>
                         <li>Order of answers within each question block will not change.</li>
                     </ul>
                 <h2 id="ug_shuffle_answers">Shuffle Answers</h2>
                     <ul>
-                        <li>Shuffle <span onclick="selectVocab('v_answer')"><a href="#ug_vocab">answers</a></span> within each question block.</li>
+                        <li>Shuffle <span onclick="highlightVocab('v_answer')"><a href="#ug_vocab">answers</a></span> within each question block.</li>
                         <li>Answers will be re-lettered.</li>
                         <li>Order of sections within the MCQ will not change.</li>
                         <li>Order and numbering of the questions within each section will not change.</li>
@@ -316,6 +338,56 @@
                     <p>Click <button>Copy Output</button> and paste your shuffled MCQ back to your computer.</p>
                     <p>Default label format is <span class="highlight">1</span><span class="highlight">2</span><span class="highlight">3</span><span class="highlight">.</span><span class="highlight">&nbsp;</span></p>
                     <p>To change it, open the <span onclick="goToStep(3); toggle(output_format, 'block', false);"><span class="link_mimic">Output&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span> and type in your own format or select an option from the dropdown.</p>
+            <h1 id="ug_vocab"><span>Vocab</span></h1>
+                <div id="vocab_div">
+                    <select name="vocab" id="vocab" onchange="highlightVocab()" size="11">
+                        <option value="v_block" selected>block</option>
+                        <option value="v_section_header">section header</option>
+                        <option value="v_question_block">question block</option>
+                        <option value="v_emptyline">emptyline</option>
+                        <option value="v_section">section</option>
+                        <option value="v_question">question</option>
+                        <option value="v_answer">answer</option>
+                        <option value="v_label">label</option>
+                        <option value="v_prefix">prefix</option>
+                        <option value="v_postfix">postfix</option>
+                        <!--<option value="v_label_space">label space</option>-->
+                        <option value="v_linebreak">linebreak</option>
+                        <option value="NONE">NONE</option>
+                    </select>
+                    <div class="v_mcq">
+                        <div class="v_section">
+                            <div class="v_block v_section_header vocab_highlight">Section header text</div><div class="v_linebreak"></div>
+                            <div class="v_emptyline"><br></div><div class="v_linebreak"></div>
+                            <div class="v_block v_question_block vocab_highlight">
+                                <div class="v_question"><span class="v_prefix">(</span><span class="v_label">1</span><span class="v_postfix">) </span>Question text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix">(</span><span class="v_label">A</span><span class="v_postfix">) </span>Answer choice text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix">(</span><span class="v_label">B</span><span class="v_postfix">) </span>Answer choice text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix">(</span><span class="v_label">C</span><span class="v_postfix">) </span>Answer choice text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix">(</span><span class="v_label">D</span><span class="v_postfix">) </span>Answer choice text</div><div class="v_linebreak"></div>
+                            </div><div class="v_linebreak"></div>
+                            <div class="v_emptyline"><br></div><div class="v_linebreak"></div>
+                            <div class="v_block v_question_block vocab_highlight"><div class="v_linebreak"></div>
+                            <div class="v_question"><span class="v_prefix"></span><span class="v_label">2</span><span class="v_postfix">. </span>Question text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix"></span><span class="v_label">A</span><span class="v_postfix">.&Tab;</span>Answer choice text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix"></span><span class="v_label">B</span><span class="v_postfix">. </span>Answer choice text</div><div class="v_linebreak"></div>
+                            </div><div class="v_linebreak"></div>
+                        </div><div class="v_linebreak"></div>
+                        <div class="v_emptyline"><br></div><div class="v_linebreak"></div>
+                        <div class="v_section"><div class="v_linebreak"></div>
+                            <div class="v_block v_section_header vocab_highlight">Section header text</div><div class="v_linebreak"></div>
+                            <div class="v_emptyline"><br></div><div class="v_linebreak"></div>
+                            <div class="v_block v_question_block vocab_highlight"><div class="v_linebreak"></div>
+                                <div class="v_question"><span class="v_prefix"></span><span class="v_label">3</span><span class="v_postfix"> </span>Question text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix">&nbsp;&nbsp;&nbsp;</span><span class="v_label">A</span><span class="v_postfix">. </span>Answer choice text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix">&nbsp;&nbsp;&nbsp;</span><span class="v_label">B</span><span class="v_postfix">. </span>Answer choice text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix">&nbsp;&nbsp;&nbsp;</span><span class="v_label">C</span><span class="v_postfix">. </span>Answer choice text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix">&nbsp;&nbsp;&nbsp;</span><span class="v_label">D</span><span class="v_postfix">. </span>Answer choice text</div><div class="v_linebreak v_prefix"></div>
+                                <div class="v_answer"><span class="v_prefix">&nbsp;&nbsp;&nbsp;</span><span class="v_label">E</span><span class="v_postfix">. </span>Answer choice text</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             <h1 id="ug_contact"><span>Contact</span></h1>
             <p>If you have any questions about how to use this website, found any bugs, or need me to customize the website to better fit the format of your quizzes, please email me at ShuffleMCQ@gmail.com</p>
         </div>
