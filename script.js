@@ -60,8 +60,8 @@ function parseMcq()
         const questionNumber = block.match(questionLabel)[2];
         block = block.replace(questionLabel, '');
 
-        const newlineBeforeAnswerLabel = new RegExp ('(?=' + toRegex(a_prefix, 'non-capturing') + '[abcde]' + toRegex(a_postfix, 'non-capturing') + ')', 'i');
-        const answers = block.split(newlineBeforeAnswerLabel);
+        const beforeAnswerLabel = new RegExp ('(?=' + toRegex(a_prefix, 'non-capturing') + '[abcde]' + toRegex(a_postfix, 'non-capturing') + ')', 'i');
+        const answers = block.split(beforeAnswerLabel);
         const questionText = answers.splice(0,1)[0];
         previousRow = createRow(questionNumber, questionText);
 
@@ -88,12 +88,11 @@ function parseMcq()
         if (label==='') row.classList.add('empty_line');
         if (isNum(label)) row.classList.add('question');
         if (['A','B','C','D','E'].includes(label)) row.classList.add('answer');
-        if (label==='error') row.classList.add('error');
 
         rowId++;
         row.id = rowId;
         textDiv.classList.add('parsed_mcq_cell_div');
-        textDiv.innerHTML = '<a>'+text.replaceAll('\n', "<br>")+'</a>';//TODO: is <a> necessary for :active ?
+        textDiv.innerHTML = text.replaceAll('\n', "<br>");
         textTd.append(textDiv);
         labelTd.textContent = label;
 
@@ -111,7 +110,6 @@ function parseMcq()
         row.append(textTd);
         row.append(keyTd);
         row.append(lockTd);
-
         parsed_mcq.append(row);
 
         return row;
@@ -122,14 +120,7 @@ function parseMcq()
         const rows = Array.from(label_table.rows);
         rows.pop(); //remove the + row
         const formats = [];
-        for (let row of rows) formats.push(
-            row.children[0].children[0].value
-            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            .replaceAll('\u21B5', '\\n')
-            .replaceAll('\u2026', '\\s*')
-            .replaceAll('\u21E5', '\\t')
-            .replaceAll('\u2022', '\\s')
-        );
+        for (const row of rows) formats.push(replaceSpecialChars(row.children[0]));
         if (mode=='non-capturing') return '\(?:' + formats.join('\|') + '\)';
         return '\(' + formats.join('\|') + '\)';
     }
@@ -211,6 +202,8 @@ function validateParsedMcq()
             if (previousLabel!=='D' || nextLabel!=='') row.classList.add('error');
         }
 
+        if (label==='error') row.classList.add('error');
+
         if (!firstErrorRow)
         {
             if (label==='error') firstErrorRow = row.id;
@@ -227,17 +220,31 @@ function isNum(label)
     return false;
 }
 
+function replaceSpecialChars(input)
+{
+    input = input.value || input.textContent;
+    return input
+        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        .replaceAll('\u21B5', '\\n')
+        .replaceAll('\u2026', '\\s*')
+        .replaceAll('\u21E5', '\\t')
+        .replaceAll('\u2022', '\\s');
+}
+
 //Parse user input from input_ak textarea. Build/validate parsed_ak table. Populate key-column in parsed_mcq table.
 function parseAk()
 {
     const userInput = input_ak.value.toUpperCase();
     if(!userInput) return input_ak.select();
-    const rawKeys = (userInput+' ').match(/\d+\D+/g) || [userInput]; //Split userInput into array of rawKey strings. Each rawKey is one number followed by text (or by ' ' if userInput ends with a number)
+
+    const before = ak_q_prefix.value ? replaceSpecialChars(ak_q_prefix) : '\\D';
+    const beforeQuestionNum = new RegExp(before + '(?=' + '\\d{1,3}' + replaceSpecialChars(ak_q_postfix) + ')', 'gi');
+    const rawKeys = (userInput+' ').split(beforeQuestionNum).filter(Boolean) || [userInput]; //Split userInput into array of rawKey strings. Each rawKey is one number followed by text (or by ' ' if userInput ends with a number)
     const rowsMcq = Array.from(parsed_mcq.children);
     const answers = parsed_mcq.getElementsByClassName('answer');
     let numbers=[];
 
-    for (let answer of answers) answer.children[2].firstElementChild.checked = false; //reset all key-column checkboxes to not checked
+    for (const answer of answers) answer.children[2].firstElementChild.checked = false; //reset all key-column checkboxes to not checked
     reset('parsed_ak');
 
     //nested forEach loops: go through each rawKey and compare it to each parsed_mcq row
@@ -246,26 +253,23 @@ function parseAk()
         const questionTdAk = document.createElement('td');
         const answerTdAk = document.createElement('td');
         const errorMessageTdAk = document.createElement('td');
-        const number = rawKey.match(/\d+/) ? rawKey.match(/\d+/)[0] : '';
+        const number = (rawKey.match(/\d{1,3}/) || [false])[0] || '';
         questionTdAk.textContent = number;
-
-        /*let correctAnswers = []; //A=1, B=2, etc.
-        ['index 0','A','B','C','D','E'].forEach(function(letter,index){
-            if (rawKey.includes(letter))
-            {
-                correctAnswers.push(index);
-                answerTdAk.textContent+=letter;
-            }
-        })*/
+        const key = rawKey.replace(new RegExp('\\d{1,3}' + replaceSpecialChars(ak_q_postfix), 'i'), '');
 
         let correctAnswers = [];
         for (const letter of ['A','B','C','D','E'])
         {
-            if (rawKey.includes(letter))
-            {
-                correctAnswers.push(letter);
-                answerTdAk.textContent+=letter;
-            }
+            if (!key.includes(replaceSpecialChars(ak_a_prefix) + letter + replaceSpecialChars(ak_a_postfix))) continue;
+            correctAnswers.push(letter);
+            answerTdAk.textContent+=letter;
+        }
+        if (firstLetterOnly.value)
+        {
+            const label = new RegExp ('(?:' + replaceSpecialChars(ak_a_prefix) + ')' + '([ABCDE])' + '(?:' + replaceSpecialChars(ak_a_postfix) + ')', 'i');
+            const firstMatch = key.match(label);
+            correctAnswers = firstMatch ? [firstMatch[1]] : [];
+            answerTdAk.textContent = firstMatch ? firstMatch[1] : '';
         }
 
         rowAk.append(questionTdAk);
@@ -289,25 +293,16 @@ function parseAk()
 
                 for (let id = qRowId+1; id <= qRowId+5; id++)
                 {
-                    let letter = rowsMcq[id].children[0].textContent;
+                    const letter = rowsMcq[id].children[0].textContent;
                     if (correctAnswers.includes(letter))
                     {
                         rowsMcq[id].children[2].firstElementChild.checked = true;
-                        correctAnswers = correctAnswers.filter(answer => answer !== letter);//remove letter from correctAnswers
+                        correctAnswers = correctAnswers.filter(answer => answer !== letter); //remove letter from correctAnswers
                     }
                     if (!rowsMcq[id].classList.contains('answer')) break;
                 }
 
                 if (correctAnswers.length) return setError('let&#xAD;ter not in MCQ', rowAk); //e.g. answer D for 'true or false' Q
-
-
-                /*for (let correctAnswer of correctAnswers){
-                    const correctAnswerRowId = qRowId + correctAnswer; //In parsed_mcq, (rowId of C) = (rowId of Q) + 3. In correctAnswers, C = 3
-                    if (!rowsMcq[correctAnswerRowId].classList.contains('answer')){
-                        return setError('let&#xAD;ter not in MCQ', rowAk); //e.g. answer D for 'true or false' Q
-                    }
-                    rowsMcq[correctAnswerRowId].children[2].firstElementChild.checked = true;
-                }*/
             }
         })
 
@@ -337,8 +332,8 @@ function shuffle(mode)
     {
         const sectionsByRow = splitParsedMcqIntoSections();
 
-        let lockedIndexes = [];
-        //section indexes are not the same as row indexes - 1st section has index 0
+        const lockedIndexes = [];
+
         const sectionHeaders = Array.from(parsed_mcq.getElementsByClassName('section'));
         sectionHeaders.forEach(function(header,index){
             if (header.children[3].firstElementChild.checked) //user locks a section by checking the lock-column checkbox next to its header
@@ -352,7 +347,7 @@ function shuffle(mode)
         reset('parsed_mcq');
 
         const rows = sectionsByRow.flat(1); //sectionsByRow array has a depth of 1
-        for (let row of rows) parsed_mcq.append(row);
+        for (const row of rows) parsed_mcq.append(row);
 
         renumberQuestions(); // question #s are out of order because sections were shuffled
         createOutput();
@@ -364,70 +359,70 @@ function shuffle(mode)
         const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
 
         sectionsByQuestion.forEach(function(section){
-            //question indexes are not the same as row indexes - 1st question of each section has index 0
-            let lockedIndexes=[0]; //section[0] = [header, emptyrow] so should be auto-locked
+            const lockedIndexes = [0]; //section[0] = [header, emptyrow] so should be auto-locked
             section.forEach(function(question,index){
-                if (index==0) return; //skip section header
+                if (index == 0) return; // skip section header
                 if (question[0].children[3].firstElementChild.checked) //user locks a question by checking the lock-column checkbox next to it
                 {
                     lockedIndexes.push(index);
                 }
             })
-            shuffleArray(section,lockedIndexes);
+            shuffleArray(section, lockedIndexes);
         })
 
         reset('parsed_mcq');
 
         const rows = sectionsByQuestion.flat(2); //sectionsByQuestion has a depth of 2
-        for (let row of rows) parsed_mcq.append(row);
+        for (const row of rows) parsed_mcq.append(row);
   
         renumberQuestions(); //question #s are out of order because questions were shuffled
         createOutput();
     }
 
     //shuffle answer options in the parsed_mcq table within their respective questions
-    function shuffleAnswers(table)
+    function shuffleAnswers()
     {
         const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions(); //depth = 2
         const tableByQuestion = sectionsByQuestion.flat(1); //[[S],[Q],[Q],[S],[Q]...] [Q]=[row, row, row...]
 
-        tableByQuestion.forEach(function(question){
-            if (question[0].classList.contains("section")) return; //skip section headers
-            //answer indexes are not the same as row indexes - 1st answer of each question has index 0
-            let lockedIndexes = [0]; //question[0] is the question itself, not one of the answers, so it should be auto-locked.
-            question.forEach(function(answer, index)
+        tableByQuestion.forEach(function(questionBlock){
+            if (questionBlock[0].classList.contains('section')) return; //skip section headers
+            const question = 0;
+            const emptyline = questionBlock.length-1;
+            const lockedIndexes = [question, emptyline];
+            questionBlock.forEach(function(answer, index)
             {
-                if (index==0 || index==question.length-1) return; //skip first row (question) and last row (empty line)
-                if (answer.children[3].firstElementChild.checked) //user locks an answer by checking the lock-column checkbox next to it
+                if (index == question || index == emptyline) return;
+                if (answer.children[3].firstElementChild.checked)
                 {
                     lockedIndexes.push(index);
                 }
             })
-            lockedIndexes.push(question.length-1);
-            shuffleArray(question,lockedIndexes);  
+            shuffleArray(questionBlock, lockedIndexes);  
         })
 
         reset('parsed_mcq');
 
         const rows = tableByQuestion.flat(1);
-        for (let row of rows) parsed_mcq.append(row);
+        for (const row of rows) parsed_mcq.append(row);
 
         reletterAnswers(); //answer letter labels are out of order because answers were shuffled
         createOutput();
     }
 
-    //Shuffle array in place, skipping elements with [lockedIndexes]. [lockedIndexes] must be in ascending order.
+    //Shuffle array in place, skipping elements with [lockedIndexes]
     function shuffleArray(array, lockedIndexes)
     {
-        let unlockedElements = array; //elements in the passed array that should be shuffled
-        let lockedElements = []; //elements in the passed array that should not be shuffled
-        for (let i of lockedIndexes) lockedElements.push(array[i]); //add locked elements to the lockedElements array
+        lockedIndexes.sort();
+        const unlockedElements = array; //elements in the passed array that should be shuffled
+        const lockedElements = []; //elements in the passed array that should not be shuffled
+        for (const i of lockedIndexes) lockedElements.push(array[i]); //add locked elements to the lockedElements array
 
         //TODO splice returns deleted items, use that to rewrite this code
         for (let i = lockedIndexes.length-1; i>=0; i--) //loop from end to start. if loop from start to end, indexes will shift when element is deleted
         {
-            let lockedIndex = lockedIndexes[i];
-            unlockedElements.splice(lockedIndex,1); //remove locked elements from the unlockedElements array
+            const lockedIndex = lockedIndexes[i];
+            unlockedElements.splice(lockedIndex, 1); //remove locked elements from the unlockedElements array
         }
 
         for (let i = unlockedElements.length - 1; i > 0; i--)
@@ -437,7 +432,7 @@ function shuffle(mode)
         }
 
         lockedIndexes.forEach(function(item, index){
-            unlockedElements.splice(item,0,lockedElements[index]); //return locked elements back into their original array indexes
+            unlockedElements.splice(item, 0, lockedElements[index]); //return locked elements back into their original array indexes
         })
 
         array = unlockedElements;
@@ -447,20 +442,20 @@ function shuffle(mode)
     function splitParsedMcqIntoSections()
     {
         const rows = Array.from(parsed_mcq.children);
-        let sectionsByRow = [];
+        const sectionsByRow = [];
 
         rows.forEach(function(row,index){
             if (index==0) return; //skip table header
 
             if (row.classList.contains('section')) //if row is section header, create new section array
             {
-                let section = [];
+                const section = [];
                 section.push(row);
                 sectionsByRow.push(section);
             }
             else //if row is a question/answer/empty line, add it to the current section array
             {
-                let currentSectionIndex = sectionsByRow.length-1;
+                const currentSectionIndex = sectionsByRow.length-1;
                 sectionsByRow[currentSectionIndex].push(row);
             }
         })
@@ -470,7 +465,7 @@ function shuffle(mode)
     //[S]=[row,row,row,row...]   =>   [S]=[[header],[Q],[Q]...] [Q]=[row,row,row,row...]
     function splitIntoQuestions(section)
     {
-        let questions = [];
+        const questions = [];
         const sectionHeader = [section[0],section[1]]; //[header, emptyrow]
         questions.push(sectionHeader);
 
@@ -479,7 +474,7 @@ function shuffle(mode)
 
             if (row.classList.contains('question')) //if row is a question, create new question array
             {
-                let question = [];
+                const question = [];
                 question.push(row);
                 questions.push(question);
             }
@@ -496,8 +491,8 @@ function shuffle(mode)
     //parced_mcq=[[S],[S],[S]...]  [S]=[[header],[Q],[Q]...]  [Q]=[row,row,row,row...]
     function splitParsedMcqIntoSectionsIntoQuestions()
     {
-        let sectionsByRow = splitParsedMcqIntoSections();
-        let sectionsByQuestion = [];
+        const sectionsByRow = splitParsedMcqIntoSections();
+        const sectionsByQuestion = [];
 
         sectionsByRow.forEach(function(section){
             sectionsByQuestion.push(splitIntoQuestions(section));  
@@ -511,13 +506,13 @@ function shuffle(mode)
         const questionRows = parsed_mcq.getElementsByClassName('question');
         const letters = ['A', 'B', 'C', 'D', 'E'];
 
-        for (let row of questionRows)
+        for (const row of questionRows)
         {
             let letterIndex = 0;
 
             function reletterAnswer(row, letterIndex)
             {
-                let nextRow = row.nextElementSibling;
+                const nextRow = row.nextElementSibling;
                 if (nextRow.classList.contains('answer')&&letterIndex<=4)
                 {
                     row.nextElementSibling.children[0].textContent = letters[letterIndex]; //letters[0] is 'A', letters[1] is 'B' etc
@@ -536,19 +531,17 @@ function createOutput()
     output.innerHTML = ''; //clear output
     const rows = Array.from(parsed_mcq.children);
     let answerKey = '<p id="output_ak">Answer Key</p>';
-    const copyButton = '<button onclick="copyOutput()">Copy Output</button>'
 
     const beforeQ = before_q.value.replaceAll('\u23CE', '<br>').replaceAll('\u21E5', '<pre style="display: inline-block;">&Tab;</pre>');
     const afterQ = after_q.value.replaceAll('\u23CE', '<br>').replaceAll('\u21E5', '<pre style="display: inline-block;">&Tab;</pre>');
     const beforeA = before_a.value.replaceAll('\u23CE', '<br>').replaceAll('\u21E5', '<pre style="display: inline-block;">&Tab;</pre>');
     const afterA = after_a.value.replaceAll('\u23CE', '<br>').replaceAll('\u21E5', '<pre style="display: inline-block;">&Tab;</pre>');
 
-    output.insertAdjacentHTML('beforeend', copyButton+'<br><br>');
-
     rows.forEach(function(row, index){
         if (index==0) return;//skip table header
 
         let text;//parsed_mcq row converts into this output text
+
         if (row.classList.contains('section'))
         {
             text = row.children[1].children[0].innerHTML; //in order to include <br>
@@ -573,37 +566,39 @@ function createOutput()
         
         output.insertAdjacentHTML('beforeend', text+'<br>')
     })
-    output.insertAdjacentHTML('beforeend', answerKey);
-    output.insertAdjacentHTML('beforeend', '<br><br>'+copyButton);
 
+    output.insertAdjacentHTML('beforeend', answerKey);
+    copy_button_1.style.display = 'block';
+    copy_button_2.style.display = 'inline-block'; // 'block' messes up bottom margin
+    
     //return answer key for one row with the given index
     function parseRowForKey(rowIndex)
     {
-        let rows = Array.from(parsed_mcq.children);
-        let row = rows[rowIndex];
-        //count how many answer options this question has
+        const rows = Array.from(parsed_mcq.children);
+        const row = rows[rowIndex];
         let answers = [];
         let i=1;
-        while (rows[rowIndex+i].classList.contains('answer')){
+        while (rows[rowIndex+i].classList.contains('answer'))
+        {
             answers.push(rows[rowIndex+i]);
             i++;
             if (i>5) break;
         }
         let correctAnswers = '';
-        /*for each answer option with a checked key-column checkbox, add its letter label to correctAnswers
-        this allows for multiple correct answers per question
-        */
-        answers.forEach(function(row){
-            if (row.children[2].firstElementChild.checked){
+
+        for (const row of answers)
+        {
+            if (row.children[2].firstElementChild.checked)
+            {
                 correctAnswers += row.children[0].textContent;
             }
-        })
-        //question number and letters of all correct answers for that question
-        return '<br>'+row.children[0].textContent+'. '+correctAnswers;
+        }
+        return '<br>'+row.children[0].textContent+'. '+correctAnswers; //question number and letters of all correct answers for that question
     }
 }
 
-function copyOutput() {
+function copyOutput()
+{
     const range = document.createRange();
     const selection = window.getSelection();
     range.selectNodeContents(document.getElementById('output'));
@@ -616,22 +611,23 @@ function copyOutput() {
 //overwrite questions #s in the label column with 1,2,3...n
 function renumberQuestions()
 {
-    let questionRows = Array.from(parsed_mcq.getElementsByClassName('question'));
+    const questionRows = Array.from(parsed_mcq.getElementsByClassName('question'));
     questionRows.forEach(function(item,index){
         item.children[0].textContent = index+1;
     })
     renumber_questions.setAttribute('disabled', true);
 }
 
-function reset(table_name){
+function reset(table_name)
+{
     if (table_name === 'parsed_mcq')
     {
         parsed_mcq.outerHTML = '<table id="parsed_mcq" style="display:table">'+
                                     '<tr id="0">'+
-                                        '<th style="width:5ch;">label</th>'+
-                                        '<th>text</th>'+
-                                        '<th style="width:4ch">key</th>'+
-                                        '<th style="width:4ch">lock</th>'+
+                                        '<th style="width:45px;">label</th>'+
+                                        '<th onclick="toggleView()" class="minimal">text</th>'+
+                                        '<th style="width:36px">key</th>'+
+                                        '<th style="width:36px">lock</th>'+
                                     '</tr>'+
                                 '</table>';
         user_guide.style.display = 'none';
@@ -652,7 +648,8 @@ function reset(table_name){
     }
 }
 
-function enterSampleMcq(){
+function enterSampleMcq()
+{
     const sample1 = 
     'The questions in this section refer to Star Wars.\n'+
     '\n'+
@@ -711,7 +708,7 @@ function enterSampleMcq(){
     'b Marge\n'+
     'c. Bart\n'+
     'D Homer\n'+
-    '(E.) Maggie\n'+
+    '(E) Maggie\n'+
     '        \n'+
     '(5) Which of the following characters<br><br>is left-handed?\n'+
     '    a Seymour Skinner\n'+
@@ -817,7 +814,26 @@ function toggle(element, display='block', hide=true)
     }
 }
 
-function goToStep(step){
+function toggleView()
+{
+    const th = parsed_mcq.querySelector('[onclick="toggleView()"]');
+    th.className = (th.className == 'minimal') ? 'expanded' : 'minimal';
+
+    for (const cell of parsed_mcq.querySelectorAll('.parsed_mcq_cell_div'))
+    {
+        if (cell.classList.contains('expanded_view'))
+        {
+            cell.classList.remove('expanded_view');
+        }
+        else
+        {
+            cell.classList.add('expanded_view');
+        }
+    };
+}
+
+function goToStep(step)
+{
     input_mcq_div.style.display = 'none';
     ak_div.style.display = 'none';
     output_div.style.display = 'none';
@@ -858,7 +874,8 @@ function goToStep(step){
     }
 }
 
-function showGoToStep(step){
+function showGoToStep(step)
+{
     if (step === 2)
     {
         const isStep1 = input_mcq_div_nav.classList.contains('active');
@@ -874,7 +891,8 @@ function showGoToStep(step){
     }
 }
 
-function highlightVocab(externalSelect=false){
+function highlightVocab(externalSelect=false)
+{
     const allElements = document.querySelectorAll('#vocab_div *');
     for (let e of allElements) e.classList.remove('vocab_highlight');
 
@@ -883,7 +901,8 @@ function highlightVocab(externalSelect=false){
     for (let e of selectedElements) e.classList.add('vocab_highlight');
 }
 
-function clearValue(input){
+function clearValue(input)
+{
     document.getElementById(input).value = '';
 }
 
@@ -891,7 +910,7 @@ function addRow(label_table)
 {
     const row = document.createElement('tr');
     const rowId = 'r' + Date.now();
-    row.innerHTML = '<td><input type="text" size="6" value=""></td>' +
+    row.innerHTML = '<td class="input" role="textbox" contenteditable></td>' +
                     '<td onclick="' + rowId + '.parentNode.removeChild(' + rowId + ')">&nbsp;&minus;&nbsp;</td>';
     row.setAttribute('id', rowId);
     const lastRow = label_table.rows[label_table.rows.length - 1];
@@ -908,7 +927,8 @@ function addRow(label_table)
     if (ie10andbelow || ie11andabove) return document.body.innerHTML += browserError;
 })(); //Run when page is loaded.
 
-function test(mode=1){
+function test(mode=1)
+{
     setTimeout(() => sample_mcq.value = mode, 3000);
     setTimeout(() => sample_mcq.onchange(), 4000);
     setTimeout(() => parse_mcq_button.click(), 6000);
