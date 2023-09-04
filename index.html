@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 
@@ -34,7 +33,7 @@
         <div id="input_mcq_div" class="step">
             <div class="settings">
                 <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_mcq_div); toggle(input_format, 'flex');">
-                <div id="sample_mcq_div"><span>
+                <div draggable id="sample_mcq_div"><span>
                     <label for="sample_mcq"><b>Populate text area below with</b> </label>
                     <select name="sample_mcq" id="sample_mcq" onchange="enterSampleMcq()">
                         <option value="0">no</option>
@@ -48,17 +47,17 @@
                     <p style="width:100%"><b>Question <span onclick="toggle(user_guide, 'block', false)"><a href="#ug_label_format">format</a></span></b></p>
                     <div class="label_div">
                         <table class="label_table" id="q_prefix">
-                            <tr id="qp_r0"> <td><input type="text" size="6" value="&mldr;("></td> <td></td> </tr>
-                            <tr id="qp_r1"> <td><input type="text" size="6" value="&mldr;"></td>  <td onclick="q_prefix.firstElementChild.removeChild(qp_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr id="qp_r0"> <td class="input" role="textbox" contenteditable>&mldr;(</td> <td></td> </tr>
+                            <tr id="qp_r1"> <td class="input" role="textbox" contenteditable>&mldr;</td>  <td onclick="q_prefix.firstElementChild.removeChild(qp_r1)">&nbsp;&minus;&nbsp;</td> </tr>
                             <tr> <td colspan="2" onclick="addRow(q_prefix)"> + </td> </tr>
                         </table>
                         <div>&nbsp;+&nbsp;Q&nbsp;number&nbsp;+&nbsp;</div>
                     </div>
                     <div class="label_div">
                         <table class="label_table" id="q_postfix">
-                            <tr id="qs_r0"> <td><input type="text" size="6" value=")&bull;"></td> <td></td> </tr>
-                            <tr id="qs_r1"> <td><input type="text" size="6" value=".&bull;"></td> <td onclick="q_postfix.firstElementChild.removeChild(qs_r1)">&nbsp;&minus;&nbsp;</td> </tr>
-                            <tr id="qs_r2"> <td><input type="text" size="6" value="&bull;"></td>  <td onclick="q_postfix.firstElementChild.removeChild(qs_r2)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr id="qs_r0"> <td class="input" role="textbox" contenteditable>)&bull;</td> <td></td> </tr>
+                            <tr id="qs_r1"> <td class="input" role="textbox" contenteditable>.&bull;</td>  <td onclick="q_postfix.firstElementChild.removeChild(qs_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr id="qs_r2"> <td class="input" role="textbox" contenteditable>&bull;</td>  <td onclick="q_postfix.firstElementChild.removeChild(qs_r2)">&nbsp;&minus;&nbsp;</td> </tr>
                             <tr> <td colspan="2" onclick="addRow(q_postfix)"> + </td> </tr>
                         </table>
                         <div>&nbsp;+&nbsp;Q&nbsp;text</div>
@@ -66,17 +65,17 @@
                     <p style="width:100%"><b>Answer <span onclick="toggle(user_guide, 'block', false)"><a href="#ug_label_format">format</a></span></b></p>
                     <div class="label_div">
                         <table class="label_table" id="a_prefix">
-                            <tr id="ap_r0"> <td><input type="text" size="6" value="&crarr;&mldr;("></td> <td></td> </tr>
-                            <tr id="ap_r1"> <td><input type="text" size="6" value="&crarr;&mldr;"></td>  <td onclick="a_prefix.firstElementChild.removeChild(ap_r1)">&nbsp;&minus;&nbsp;</td> </tr>
-                            <tr> <td colspan="2" onclick="addRow(a_prefix)"> + </td></tr>
+                            <tr id="ap_r0"> <td class="input" role="textbox" contenteditable>&crarr;&mldr;(</td> <td></td> </tr>
+                            <tr id="ap_r1"> <td class="input" role="textbox" contenteditable>&crarr;&mldr;</td>  <td onclick="a_prefix.firstElementChild.removeChild(ap_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr> <td colspan="2" onclick="addRow(a_prefix)"> + </td> </tr>
                         </table>
-                        <div>&nbsp;+&nbsp;A&nbsp;letter&nbsp; + &nbsp;</div>
+                        <div>&nbsp;+&nbsp;A&nbsp;letter&nbsp;+&nbsp;</div>
                     </div>
                     <div class="label_div">
                         <table class="label_table" id="a_postfix">
-                            <tr id="as_r0"> <td><input type="text" size="6" value=")&bull;"></td> <td></td> </tr>
-                            <tr id="as_r1"> <td><input type="text" size="6" value=".&bull;"></td> <td onclick="a_postfix.firstElementChild.removeChild(as_r1)">&nbsp;&minus;&nbsp;</td> </tr>
-                            <tr id="as_r2"> <td><input type="text" size="6" value="&bull;"></td>  <td onclick="a_postfix.firstElementChild.removeChild(as_r2)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr id="as_r0"> <td class="input" role="textbox" contenteditable>)&bull;</td> <td></td> </tr>
+                            <tr id="as_r1"> <td class="input" role="textbox" contenteditable>.&bull;</td>  <td onclick="a_postfix.firstElementChild.removeChild(as_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr id="as_r2"> <td class="input" role="textbox" contenteditable>&bull;</td>  <td onclick="a_postfix.firstElementChild.removeChild(as_r2)">&nbsp;&minus;&nbsp;</td> </tr>
                             <tr> <td colspan="2" onclick="addRow(a_postfix)"> + </td> </tr>
                         </table>
                         <div>&nbsp;+&nbsp;A&nbsp;text</div>
@@ -90,7 +89,7 @@
 
         <div id="ak_div" class="step">
             <div id="ak_settings" class="settings">
-                <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_ak_div)">
+                <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_ak_div); toggle(ak_format);">
                 <div id="sample_ak_div"><span>
                     <label for="sample_ak"><b>Populate text area below with</b> </label>
                     <select name="sample_ak" id="sample_ak" onchange="enterSampleAk()">
@@ -101,6 +100,23 @@
                     </select>
                     <b>sample answer key</b>
                 </span></div>
+                <div id="ak_format">
+                    <p><b>Question format</b></p>
+                    <span class="input" role="textbox" id="ak_q_prefix" onblur="parseAk()" contenteditable></span>
+                    <span>+ Q&nbsp;number + </span>
+                    <span class="input" role="textbox" id="ak_q_postfix" onblur="parseAk()" contenteditable></span>
+                    <br><br>
+                    <p><b>Answer format</b></p>
+                    <span class="input" role="textbox" id="ak_a_prefix" onblur="parseAk()" contenteditable></span>
+                    <span> + </span>
+                    <select id="firstLetterOnly" onblur="parseAk()">
+                        <option value="">A letter(s)</option>
+                        <option value="true">A letter</option>
+                    </select>
+                    <span> + </span>
+                    <span class="input" role="textbox" id="ak_a_postfix" onblur="parseAk()" contenteditable></span>
+                    <br><br>
+                </div>
             </div>
             <textarea id="input_ak" rows="100" placeholder="Paste your answer key here, then click 'Parse Key'."></textarea>
             <div>
@@ -118,7 +134,7 @@
             <div class="settings">
                 <img src="gear-solid.svg" alt="settings" class="settings_gear" id="output_settings_gear" onclick="toggle(output_format); toggle(renumber_questions_div);">
                 <div id="renumber_questions_div">
-                    <button id="renumber_questions" onclick="renumberQuestions()">Renumber questions without shuffling</button>
+                    <button id="renumber_questions" onclick="renumberQuestions()" disabled>Renumber questions</button><br>
                 </div>
                 <div id="output_format">
                     <p><b>Question format</b></p>
@@ -145,7 +161,7 @@
                         <option value="<b>">
                     </datalist>
                     <span> + </span>
-                    <select name="a_case" id="a_lowercase" onchange="createOutput()">
+                    <select id="a_lowercase" onchange="createOutput()">
                         <option value="">ABCDE</option>
                         <option value="true">abcde</option>
                     </select>
@@ -162,7 +178,9 @@
                     <br><br>
                 </div>
             </div>
+            <button onclick="copyOutput()" style="display:none" id="copy_button_1">Copy Output</button>
             <p id="output"></p>
+            <button onclick="copyOutput()" style="display:none" id="copy_button_2">Copy Output</button>
         </div>
     </div>
 
@@ -283,31 +301,36 @@
                             </tr>
                             <tr>
                                 <td>&bull;</td>
-                                <td>one space or tab</td>
+                                <td>one space or tab or linebreak</td>
                             </tr>
                             <tr>
                                 <td>&mldr;</td>
-                                <td>zero or more consecutive spaces/tabs</td>
+                                <td>zero or more consecutive spaces/&#x200B;tabs/&#x200B;linebreaks</td>
                             </tr>
                             <tr>
                                 <td>&#8677;</td>
                                 <td>tab</td>
                             </tr>
                         </table>
-                        <p style="flex:1; padding-left:10px">If needed, copy a special character from this table and paste it into the settings.</p>
+                        <p style="flex:1; padding-left:10px">
+                            If needed, copy a special character from this table and paste it into the settings.<br><br>
+                            These characters may also be used in <span onclick="goToStep(2); toggle(sample_ak_div, 'block', false); toggle(ak_format, 'block', false);" class="link_mimic">Answer Key settings</span> and <span onclick="goToStep(3); toggle(output_format, 'block', false); toggle(renumber_questions_div, 'block', false);" class="link_mimic">Output settings</span>.
+                        </p>
                     </div>
                 <h2 id="ug_validation">Validation</h2>
                     <p>After you input your MCQ and click <button class="middle_div_button_mimic">Parse<br>MCQ</button>, the Parsed MCQ table will appear on the right.</p>
                     <p><img src="parsed-mcq-sample.png" id="parsed_mcq_sample"></p>
-                    <p>Visually scan the table to verify that it matches what you intended to enter.</p>
+                    <p>Visually scan<sup onclick="toggle(ug_note_3)" class="asterisk">*</sup> the table to verify that it matches what you intended to enter.</p>
+                    <p id="ug_note_3" class="note">If text in a cell is clipped, click on the cell to expand it. To expand all cells, mouse over the <span class="th-mimic" style="color: var(--bluelink)">text</span> table header, then click <span style="color: var(--bluelink); font-size:10px;">switch view</span></p>
                     <p>If you find any errors, go back to the Input MCQ <span onclick="goToStep(1)" class="link_mimic">text area</span> or <span onclick="goToStep(1); toggle(sample_mcq_div, 'block', false); toggle(input_format, 'flex', false);"> <span class="link_mimic">settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span> to fix them, then parse the MCQ again.</p>
             <h1 id="ug_step_2"><span>Step 2: Enter your Answer Key</span></h1>
                 <h2 id="ug_manual_entry">Manual Entry</h2>
-                    <p>In the KEY column of the <a href="#ug_validation">Parsed MCQ table</a>, mark the checkbox next to the correct answer for each question. Multiple answers per question are allowed.</p>
+                    <p>In the <span style="font-variant: small-caps;">key</span> column of the <a href="#ug_validation">Parsed MCQ table</a>, mark the checkbox next to the correct answer for each question. Multiple answers per question are allowed.</p>
                 <h2 id="ug_bulk_entry">Bulk Entry</h2>
                     <p>Alternatively, you can paste your entire answer key into the <span onclick="goToStep(2)" class="link_mimic">Answer Key text area</span>.</p>
                     <p>Any format works, so long as the key contains the question number followed by its answer letter(s). Symbols other than <span class="highlight">0123456789</span> and <span class="highlight">ABCDE</span> and <span class="highlight">abcde</span> will be ignored.</p>
-                    <p>Double-check the KEY column of the <a href="#ug_validation">Parsed MCQ table</a> to verify that your answer key was parsed correctly.</p>
+                    <p>If your key includes numbers that are not question numbers or letters that are not answer letters, you can configure that in the <span onclick="goToStep(2); toggle(sample_ak_div, 'block', false); toggle(ak_format, 'block', false);"><span class="link_mimic">Answer&nbsp;Key&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>.</p>
+                    <p>Double-check the <span style="font-variant: small-caps;">key</span> column of the <a href="#ug_validation">Parsed MCQ table</a> to verify that your answer key was parsed correctly.</p>
             <h1 id="ug_step_3"><span>Step 3: Shuffle!</span></h1>
                 <h2 id="ug_shuffle_sections">Shuffle Sections</h2>
                     <ul>
@@ -331,13 +354,13 @@
                         <li>Order and numbering of the questions within each section will not change.</li>
                     </ul>
                 <h2 id="ug_lock">Lock</h2>
-                    <p>Use the checkbox in the LOCK column of the <a href="#ug_validation">Parsed MCQ table</a> to lock a section/question/answer in place while the rest of the MCQ is being shuffled.</p>
+                    <p>Use the checkbox in the <span style="font-variant: small-caps;">lock</span> column of the <a href="#ug_validation">Parsed MCQ table</a> to lock a section/question/answer in place while the rest of the MCQ is being shuffled.</p>
                     <p>For example, you may want to lock "E. All of the above" as the last answer choice.</p>
                 <h2 id="ug_output">Output</h2>
                     <p>The updated answer key will be at the bottom of the <span onclick="goToStep(3); createOutput();" class="link_mimic">Output</span>.</p>
                     <p>Click <button>Copy Output</button> and paste your shuffled MCQ back to your computer.</p>
                     <p>Default label format is <span class="highlight">1</span><span class="highlight">2</span><span class="highlight">3</span><span class="highlight">.</span><span class="highlight">&nbsp;</span></p>
-                    <p>To change it, open the <span onclick="goToStep(3); toggle(output_format, 'block', false);"><span class="link_mimic">Output&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span> and type in your own format or select an option from the dropdown.</p>
+                    <p>To change it, open the <span onclick="goToStep(3); toggle(output_format, 'block', false); toggle(renumber_questions_div, 'block', false);"><span class="link_mimic">Output&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span> and type in your own format or select an option from the dropdown.</p>
             <h1 id="ug_vocab"><span>Vocab</span></h1>
                 <div id="vocab_div">
                     <select name="vocab" id="vocab" onchange="highlightVocab()" size="11">
@@ -351,7 +374,6 @@
                         <option value="v_label">label</option>
                         <option value="v_prefix">prefix</option>
                         <option value="v_postfix">postfix</option>
-                        <!--<option value="v_label_space">label space</option>-->
                         <option value="v_linebreak">linebreak</option>
                         <option value="NONE">NONE</option>
                     </select>
