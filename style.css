@@ -69,8 +69,21 @@
     font-size: var(--f2);
     text-decoration: underline;
 }
+#ak_format input,
+#ak_format .input,
 #output_format input {
     margin-top: 5px;
+}
+
+#renumber_questions:hover::after {
+    content: ' without shuffling (e.g. 9,4,7 \2192  1,2,3)'
+}
+#output_div button {
+    cursor: pointer;
+}
+#copy_button_1,
+#copy_button_2 {
+    margin: 0 0 8px 8px;
 }
 
 .settings {
@@ -98,6 +111,8 @@
 .label_table {
     display: table;
     margin-top: 3px;
+    border-collapse: collapse; /* Add this line */
+
 }
 .label_table td {
     padding: 0;
@@ -116,23 +131,39 @@
 }.label_table tr:first-child > td:nth-child(2):hover {
     background-color: rgb(70, 70, 70);
 }
+.label_table td.input {
+    color: black;
+    text-align: left;
+}
 
+.input,
 input {
     background-image: linear-gradient(to right, #ddd 1ch, white 1ch);
     background-size: 2ch 100%;
     background-repeat: repeat;
     font-family: monospace;
     font-size: var(--f3);
-    border: 0px;
     padding-left: 0;
     padding-right: 0;
+    border: 0;
+}
+#ak_format .input,
+.label_table td.input {
+    min-width: 4ch;
+}
+#ak_format .input,
+#output_format input {
+    display: inline-block;
     outline: 1px solid black;
 }
-input:focus{
-    outline: 2px solid #025ecc;
+.input:focus,
+#output_format input:focus{
+    outline: 2px solid #025ecc !important;
 }
-input[type='checkbox'] {
-    outline: 0;
+.label_table td.input:focus {
+    outline-offset: -0.5px;
+    position: relative;
+    z-index: 1;
 }
 
 #left_div select,
@@ -157,7 +188,7 @@ input[type='checkbox'] {
     transform: translateY(-1px);
 }
 #nav_tabs > li > a {
-    color: #337ab7;
+    color: var(--bluelink);
     text-decoration: none;
     margin-right: 2px;
     line-height: 1.42857143;
@@ -211,7 +242,6 @@ input[type='checkbox'] {
         border-radius: 0;
     }
     #nav_tabs > li.active > a {
-        /*background-color: var(--lightgray);*/
         background-color: var(--lightgray);
         border: 0;
         border-left: 3px solid #555555;
@@ -281,6 +311,52 @@ input[type='checkbox'] {
     top: var(--header_height);
     outline: solid black 2px; /*border conflicts with position:sticky and border-collapse:collapse*/
 }
+#parsed_mcq th:nth-child(2){
+    padding-left: calc(3ch - 2px);
+    color: var(--bluelink);
+}
+#parsed_mcq th:nth-child(2):hover{
+    font-size: 0;
+    cursor: pointer;
+}
+#parsed_mcq th:nth-child(2):hover:before {
+    content: 'switch view';
+    text-transform: lowercase;
+    font-variant: normal;
+    font-size: 10px;
+    float: none;
+}
+.minimal:after {
+    content: '\00B7\00B7\00B7\00A0';
+    float: right;
+    font-size: 10px;
+    width: 3ch;
+    color: black;
+    transform: translateY(-0.75px);
+    scale: 140%;
+}
+.expanded:after {
+    content: ':::\00A0';
+    float: right;
+    font-size: 10px;
+    width: 3ch;
+    color: black;
+    transform: translateY(-1.25px);
+    scale: 140%;
+}
+#parsed_mcq td:nth-child(2)
+{
+    white-space: nowrap;
+    overflow: clip;
+}
+.parsed_mcq_cell_div {
+    max-height: 3em;
+}
+.expanded_view,
+.parsed_mcq_cell_div:active {
+    max-height: none;
+    white-space: pre-wrap;
+}
 #parsed_mcq td:nth-child(3),
 #parsed_mcq td:nth-child(4) {
     text-align: center;
@@ -301,15 +377,6 @@ input[type='checkbox'] {
     border: 5px solid red;
     background-color: white;
 }
-.parsed_mcq_cell_div {
-    max-height: 3em;
-    white-space: nowrap;
-    /*overflow: auto; /*Firefox*/
-}
-.parsed_mcq_cell_div:active {
-    max-height: none;
-    white-space: pre-wrap;
-}
 
 /* --- Header  ---*/
 
@@ -323,7 +390,7 @@ input[type='checkbox'] {
 }
 
 #user_guide_button {
-    color: #337ab7;
+    color: var(--bluelink);
     background-color: white;
     width: 50px;
     height: 50px;
@@ -343,7 +410,7 @@ input[type='checkbox'] {
 }
 .user_guide_tooltip:hover::before {
     content: 'User Guide';
-    color: #337ab7;
+    color: var(--bluelink);
     padding-left: 12px;
 }
 
@@ -559,6 +626,7 @@ html, body {
     margin-block-start: 0;
     display: flex;
     --lightgray: rgb(240, 240, 240);
+    --bluelink: #337ab7;
     --main_div_padding: 15px;
     --header_height: 63px;
     --font_family: 'Verdana';
@@ -575,7 +643,7 @@ html, body {
     position: -webkit-sticky; /* Safari */
     position: sticky;
     top: 0px;
-    z-index: 1;
+    z-index: 2;
     min-height: var(--header_height);
     padding-top: var(--main_div_padding);
     background-color: var(--lightgray);
@@ -591,11 +659,13 @@ tr {
 td {
     padding: 2px;
     border: 0.5px solid black;
-    overflow: auto;
 }
+.th-mimic,
 th {
     font-weight: normal;
-    font-variant: small-caps;
+    text-transform: uppercase;
+    font-size: 10px;
+    padding: 2px 2px 2px 0; 
 }
 
 button {
@@ -635,7 +705,15 @@ button {
 }
 
 #lx1 {
-    top: 23px;
+    top: 76px;
+}
+
+#lx2 {
+    top: 83.5px;
+}
+
+#lx3 {
+    top: 91px;
 }
 
 
