@@ -64,6 +64,8 @@
 }
 #output {
     padding: 8px;
+    white-space: pre;
+
 }
 #output_ak {
     font-size: var(--f2);
