@@ -538,6 +538,7 @@ function createOutput()
     const afterA = after_a.value.replaceAll('\u23CE', '<br>').replaceAll('\u21E5', '<pre style="display: inline-block;">&Tab;</pre>');
 
     rows.forEach(function(row, index){
+
         if (index==0) return;//skip table header
 
         let text;//parsed_mcq row converts into this output text
@@ -616,6 +617,7 @@ function renumberQuestions()
         item.children[0].textContent = index+1;
     })
     renumber_questions.setAttribute('disabled', true);
+    createOutput();
 }
 
 function reset(table_name)
