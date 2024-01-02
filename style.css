@@ -64,7 +64,7 @@
 }
 #output {
     padding: 8px;
-    white-space: pre;
+    white-space: pre-wrap;
 
 }
 #output_ak {
