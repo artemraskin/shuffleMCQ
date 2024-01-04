@@ -1,10 +1,99 @@
 'use strict';
 
+function handlePaste (e)
+{
+    e.preventDefault();
+
+    const joker = 'unique string 441160520';
+
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+
+    let pasted = document.createElement('div');
+    pasted.innerHTML = (e.clipboardData).getData('text/html');
+    if (input_mode.value == 'plain') pasted = document.createTextNode((e.clipboardData).getData('text/plain'));
+    
+    range.deleteContents();
+    range.insertNode(pasted);
+    range.setStartAfter(pasted);
+    range.collapse(true);
+
+    if (input_mode.value == 'plain') return;
+
+    const images = [];
+    for (const el of input_mcq.querySelectorAll('img'))
+    {
+        images.push(el.outerHTML);
+        el.outerHTML = joker+'image'+images.length;
+    }
+
+    const tables = [];
+    for (const el of input_mcq.querySelectorAll('table'))
+    {
+        tables.push(el.outerHTML);
+        el.outerHTML = joker+'table'+tables.length;
+    }
+
+    for (const el of input_mcq.querySelectorAll('br'))
+    {
+        el.outerHTML = joker+'LB';
+    }
+
+    for (const el of input_mcq.querySelectorAll('ol'))
+    {
+        const listItems = el.querySelectorAll('li[style*="list-style-type:upper-alpha"]');
+
+        let letterCode = 'A'.charCodeAt(0);
+
+        listItems.forEach((li, index) => {
+            const letter = String.fromCharCode(letterCode + index);
+            li.textContent = letter + ". " + li.textContent;
+        });
+    }
+
+    for (const el of input_mcq.getElementsByTagName('*'))
+    {
+        const displayType = window.getComputedStyle(el).getPropertyValue('display');
+        if (['block','list-item'].includes(displayType)) el.innerHTML += joker+'LB';
+    };
+    
+    input_mcq.innerHTML = input_mcq.textContent.replaceAll(joker+'LB','\n');
+
+    for (let i = 0; i <tables.length; i++)
+    {
+        input_mcq.innerHTML = input_mcq.innerHTML.replace(joker+'table'+(i+1), tables[i]);
+    }
+
+    for (let i = 0; i <images.length; i++)
+    {
+        input_mcq.innerHTML = input_mcq.innerHTML.replace(joker+'image'+(i+1), images[i]);
+    }
+}
+
+function handleEnter(e) {
+
+    if (! (e.key === 'Enter' || e.keyCode === 13)) return;
+
+    e.preventDefault();
+
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+
+    const newline = document.createTextNode('\n');
+
+    range.deleteContents();
+    range.insertNode(newline); // Insert the newline at the current selection
+    range.setStartAfter(newline); // Move the selection after the inserted newline
+    range.collapse(true);
+}
+
 //Parse user input from input_mcq textarea. Build/validate parsed_mcq table.
 function parseMcq()
 {
-    const userInput = input_mcq.value.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
-    if (!userInput) return input_mcq.select();
+    //const userInput = input_mcq.value.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
+    const userInput = input_mcq.innerHTML.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
+
+    if (!userInput) return select(input_mcq);
 
     reset('parsed_mcq');
     let previousRow;
@@ -855,7 +944,7 @@ function goToStep(step)
         input_mcq_div.style.display = 'block';
         input_mcq_div_nav.classList.add('active');
         parse_mcq_button.style.display = 'block';
-        input_mcq.select();
+        select(input_mcq);
     }
 
     if (step === 2)
@@ -917,6 +1006,15 @@ function addRow(label_table)
     row.setAttribute('id', rowId);
     const lastRow = label_table.rows[label_table.rows.length - 1];
     label_table.children[0].insertBefore(row, lastRow);
+}
+
+function select(element)
+{
+    var range = document.createRange();
+    range.selectNodeContents(element);
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
 }
 
 //Show error message to users with IE browsers
