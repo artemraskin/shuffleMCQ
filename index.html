@@ -32,8 +32,8 @@
         </ul>
         <div id="input_mcq_div" class="step">
             <div class="settings">
-                <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_mcq_div); toggle(input_format, 'flex');">
-                <div draggable id="sample_mcq_div"><span>
+                <img src="gear-solid.svg" alt="settings" class="settings_gear" onclick="toggle(sample_mcq_div); toggle(input_format, 'flex'); toggle(input_mode_div);">
+                <div id="sample_mcq_div"><span>
                     <label for="sample_mcq"><b>Populate text area below with</b> </label>
                     <select name="sample_mcq" id="sample_mcq" onchange="enterSampleMcq()">
                         <option value="0">no</option>
@@ -81,10 +81,16 @@
                         <div>&nbsp;+&nbsp;A&nbsp;text</div>
                     </div>
                 </div>
+                <div id="input_mode_div"><span>
+                    <label for="input_mode"><b>Input mode</b></label>
+                    <br>
+                    <select name="input_mode" id="input_mode">
+                        <option value="plain">paste as plain text</option>
+                        <option>enable images, tables, and lettered lists</option>
+                    </select>
+                </div>
             </div>
-            <textarea id="input_mcq" rows="100" placeholder=
-                "Paste your multiple-choice questions here, then click 'Parse MCQ'.&#13;Each question must be separated from the next question by an empty line."
-            ></textarea> 
+            <pre id="input_mcq" contenteditable onpaste="handlePaste(event)" onkeydown="handleEnter(event)"></pre>
         </div>
 
         <div id="ak_div" class="step">
