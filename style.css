@@ -1,5 +1,4 @@
 /* ---------------------- LEFT ----------------------*/
-
 #left_div {
     flex: 1;
     overflow: auto;
@@ -25,17 +24,9 @@
     vertical-align: bottom;
     margin: 0;
     padding: 5px;
-    white-space: pre-wrap;
     min-height: 300px;
-    border: 1px solid rgb(118, 118, 118);
 }
-#input_mcq:empty:before {
-    content: "Paste your multiple-choice questions here, then click 'Parse MCQ'. \A Each question must be separated from the next question by an empty line.";
-    pointer-events: none;
-    white-space: pre-wrap;
-    color: rgba(117,117,117,255);
-    display: block; /* For Firefox */
-}
+
 #input_format {
     margin-top: 8px;
     margin-bottom: 8px;
