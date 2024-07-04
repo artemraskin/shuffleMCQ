@@ -1,45 +1,40 @@
 'use strict';
 
+//custom convert pasted HTML to plain text, then paste it into input_mcq
 function handlePaste (e)
 {
+    if (input_mode.value == 'plain') return;
     e.preventDefault();
 
-    const joker = 'unique string 441160520';
+    pasted.innerHTML = (e.clipboardData).getData('text/html') || (e.clipboardData).getData('text/plain');
 
-    const selection = window.getSelection();
-    const range = selection.getRangeAt(0);
-
-    let pasted = document.createElement('div');
-    pasted.innerHTML = (e.clipboardData).getData('text/html');
-    if (input_mode.value == 'plain') pasted = document.createTextNode((e.clipboardData).getData('text/plain'));
-    
-    range.deleteContents();
-    range.insertNode(pasted);
-    range.setStartAfter(pasted);
-    range.collapse(true);
-
-    if (input_mode.value == 'plain') return;
-
-    const images = [];
-    for (const el of input_mcq.querySelectorAll('img'))
+    for (const el of pasted.querySelectorAll('img'))
     {
-        images.push(el.outerHTML);
-        el.outerHTML = joker+'image'+images.length;
+        const counter = parseInt(images_counter.innerHTML) + 1;
+        images_counter.innerHTML = counter;
+        const clone = el.cloneNode(true);
+        clone.id = 'image' + counter;
+        clone.removeAttribute('style');
+        images.appendChild(clone);
+        el.replaceWith(document.createTextNode("IMАGE " + counter)); //cyrillic А
     }
 
-    const tables = [];
-    for (const el of input_mcq.querySelectorAll('table'))
+    for (const el of pasted.querySelectorAll('table'))
     {
-        tables.push(el.outerHTML);
-        el.outerHTML = joker+'table'+tables.length;
+        const counter = parseInt(tables_counter.innerHTML) + 1;
+        tables_counter.innerHTML = counter;
+        const clone = el.cloneNode(true);
+        clone.id = 'table' + counter;
+        tables.appendChild(clone);
+        el.replaceWith(document.createTextNode("TАBLE " + counter)); //cyrillic А
     }
 
-    for (const el of input_mcq.querySelectorAll('br'))
+    for (const el of pasted.querySelectorAll('br'))
     {
-        el.outerHTML = joker+'LB';
+        el.outerHTML = 'LINEBREАK'; //cyrillic А
     }
 
-    for (const el of input_mcq.querySelectorAll('ol'))
+    for (const el of pasted.querySelectorAll('ol'))
     {
         const listItems = el.querySelectorAll('li[style*="list-style-type:upper-alpha"]');
 
@@ -51,47 +46,26 @@ function handlePaste (e)
         });
     }
 
-    for (const el of input_mcq.getElementsByTagName('*'))
+    for (const el of pasted.getElementsByTagName('*'))
     {
         const displayType = window.getComputedStyle(el).getPropertyValue('display');
-        if (['block','list-item'].includes(displayType)) el.innerHTML += joker+'LB';
+        if (['block','list-item'].includes(displayType)) el.innerHTML += 'LINEBREАK'; //cyrillic А
     };
-    
-    input_mcq.innerHTML = input_mcq.textContent.replaceAll(joker+'LB','\n');
 
-    for (let i = 0; i <tables.length; i++)
-    {
-        input_mcq.innerHTML = input_mcq.innerHTML.replace(joker+'table'+(i+1), tables[i]);
-    }
-
-    for (let i = 0; i <images.length; i++)
-    {
-        input_mcq.innerHTML = input_mcq.innerHTML.replace(joker+'image'+(i+1), images[i]);
-    }
-}
-
-function handleEnter(e) {
-
-    if (! (e.key === 'Enter' || e.keyCode === 13)) return;
-
-    e.preventDefault();
-
-    const selection = window.getSelection();
-    const range = selection.getRangeAt(0);
-
-    const newline = document.createTextNode('\n');
-
-    range.deleteContents();
-    range.insertNode(newline); // Insert the newline at the current selection
-    range.setStartAfter(newline); // Move the selection after the inserted newline
-    range.collapse(true);
+    //paste
+    const start = input_mcq.selectionStart;
+    const end = input_mcq.selectionEnd;
+    const current = input_mcq.value;
+    const added = pasted.textContent.replaceAll('LINEBREАK','\n'); //cyrillic А
+    const combined = current.substring(0, start) + added + current.substring(end);
+    input_mcq.value = combined;
+    input_mcq.setSelectionRange(start + added.length, start + added.length); //move cursor
 }
 
 //Parse user input from input_mcq textarea. Build/validate parsed_mcq table.
 function parseMcq()
 {
-    //const userInput = input_mcq.value.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
-    const userInput = input_mcq.innerHTML.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
+    const userInput = input_mcq.value.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
 
     if (!userInput) return select(input_mcq);
 
@@ -107,7 +81,6 @@ function parseMcq()
     createOutput();
     showGoToStep(2);
     renumber_questions.removeAttribute('disabled');
-
 
     //helper functions:
 
@@ -165,7 +138,7 @@ function parseMcq()
 
     //convert to table row, append to parsed_mcq table
     function createRow(label, text)
-    {
+    {        
         const row = document.createElement('tr');
         const labelTd = document.createElement('td');
         const textTd = document.createElement('td');
@@ -181,7 +154,7 @@ function parseMcq()
         rowId++;
         row.id = rowId;
         textDiv.classList.add('parsed_mcq_cell_div');
-        textDiv.innerHTML = text.replaceAll('\n', "<br>");
+        textDiv.innerHTML = restoreHtml (text);
         textTd.append(textDiv);
         labelTd.textContent = label;
 
@@ -202,6 +175,24 @@ function parseMcq()
         parsed_mcq.append(row);
 
         return row;
+
+        function restoreHtml (text)
+        {
+            text = text.replaceAll('\n', "<br>");
+
+            function replacer(match)
+            {
+                const pastedHtml = document.getElementById(match);
+                return pastedHtml ? pastedHtml.outerHTML : match;
+            }    
+            text = text.replaceAll('TАBLE ','table'); //cyrillic А
+            text = text.replaceAll (/table\d+/g, replacer);
+            //replace tables before images, in case image inside table
+            text = text.replaceAll('IMАGE ','image'); //cyrillic А
+            text = text.replaceAll (/image\d+/g, replacer);
+
+            return text;
+        }
     }
 
     function toRegex(label_table, mode=false)
@@ -309,15 +300,17 @@ function isNum(label)
     return false;
 }
 
+//process question/answer format settings
 function replaceSpecialChars(input)
 {
     input = input.value || input.textContent;
     return input
-        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        .replaceAll('\u21B5', '\\n')
-        .replaceAll('\u2026', '\\s*')
-        .replaceAll('\u21E5', '\\t')
-        .replaceAll('\u2022', '\\s');
+        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&') //add backslash to escape special regex characters
+        .replaceAll('\u21B5', '\\n') //↵
+        .replaceAll('\u2026', '\\s*') //…
+        .replaceAll('\u21E5', '\\t') //⇥
+        .replaceAll('\u2022', '\\s') //•
+        .replaceAll('\u00A0', ' '); //nbsc - override default contenteditable behavior
 }
 
 //Parse user input from input_ak textarea. Build/validate parsed_ak table. Populate key-column in parsed_mcq table.
@@ -326,13 +319,12 @@ function parseAk()
     const userInput = input_ak.value.toUpperCase();
     if(!userInput) return input_ak.select();
 
-    const before = ak_q_prefix.value ? replaceSpecialChars(ak_q_prefix) : '\\D';
+    const before = ak_q_prefix.textContent ? replaceSpecialChars(ak_q_prefix) : '\\D';
     const beforeQuestionNum = new RegExp(before + '(?=' + '\\d{1,3}' + replaceSpecialChars(ak_q_postfix) + ')', 'gi');
     const rawKeys = (userInput+' ').split(beforeQuestionNum).filter(Boolean) || [userInput]; //Split userInput into array of rawKey strings. Each rawKey is one number followed by text (or by ' ' if userInput ends with a number)
     const rowsMcq = Array.from(parsed_mcq.children);
     const answers = parsed_mcq.getElementsByClassName('answer');
     let numbers=[];
-
     for (const answer of answers) answer.children[2].firstElementChild.checked = false; //reset all key-column checkboxes to not checked
     reset('parsed_ak');
 
