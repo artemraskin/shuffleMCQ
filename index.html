@@ -11,6 +11,7 @@
     <meta property="og:image" content="http://www.shufflemcq.com/logo.jpeg" />
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="627">
+    <meta charset="UTF-8">
 </head>
 
 <!-- Google tag (gtag.js) -->
@@ -90,7 +91,17 @@
                     </select>
                 </div>
             </div>
-            <pre id="input_mcq" contenteditable onpaste="handlePaste(event)" onkeydown="handleEnter(event)"></pre>
+
+            <textarea id="input_mcq" rows="100" onpaste="handlePaste(event)" placeholder=
+                "Paste your multiple-choice questions here, then click 'Parse MCQ'.&#13;Each question must be separated from the next question by an empty line."
+            ></textarea> 
+            <div id="images" hidden>
+                <div id="images_counter">0</div>
+            </div>
+            <div id="tables" hidden>
+                <div id="tables_counter">0</div>
+            </div>
+            <div id="pasted" hidden>0</div>
         </div>
 
         <div id="ak_div" class="step">
@@ -239,12 +250,21 @@
                     </ul>
                 </div>
             <h1 id="ug_step_1"><span>Step 1: Enter your MCQs</span></h1>        
-                <p>Paste the entire text<sup onclick="toggle(ug_note_1)" class="asterisk">*</sup> of your quiz into the <span onclick="goToStep(1)" class="link_mimic">Input MCQ text area</span>.</p>
+                <p>Paste the entire text of your quiz into the <span onclick="goToStep(1)" class="link_mimic">Input MCQ text area</span>.</p>
+                <p>By default, all pasted text will become plain text<sup onclick="toggle(ug_note_1)" class="asterisk">*</sup>.
                 <p id="ug_note_1" class="note">
-                    All pasted text will become plain text. If you need to preserve some formatting, you can add it manually with HTML. To view an example, open 
-                    <span onclick="goToStep(1); toggle(sample_mcq_div, 'block', false); toggle(input_format, 'flex', false);"><span class="link_mimic">Input&nbsp;MCQ&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>
+                    If you need to preserve an image or a table, open 
+                    <span onclick="goToStep(1); toggle(sample_mcq_div, 'block', false); toggle(input_format, 'flex', false); toggle(input_mode_div, 'block', false);"><span class="link_mimic">Input&nbsp;MCQ&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>
+                    and select <span style="border: 1px solid black; padding: 1px; background-color: white">enable&nbsp;images,&nbsp;tables,&nbsp;and&nbsp;lettered&nbsp;lists&nbsp;<sup>&#9013;</sup></span>
+                    under <b>Input mode</b>. This mode works best when pasting from a Google Doc.
+                    <br><br>
+                    If your MCQ is copied from a Google Doc, and your answers are formatted as <a href="https://support.google.com/docs/answer/3300615" target="_blank">Numbered&nbsp;list</a>&nbsp;<img src="numbered-list.png" id="numbered_list">, the answer labels will not be preserved in the plain text mode.
+                    The <span style="border: 1px solid black; padding: 1px; background-color: white">enable&nbsp;images,&nbsp;tables,&nbsp;and&nbsp;lettered&nbsp;lists&nbsp;<sup>&#9013;</sup></span> mode resolves this.
+                    If your MCQ is copied from a Word Doc or a PDF, numbered/lettered lists will work in the plain text mode.
+                    <br><br>
+                    You can also add formatting manually with HTML. To view an example, open
+                    <span onclick="goToStep(1); toggle(sample_mcq_div, 'block', false); toggle(input_format, 'flex', false); toggle(input_mode_div, 'block', false);"><span class="link_mimic">Input&nbsp;MCQ&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>
                     and select <b>Populate text area below with</b> <span style="border: 1px solid black; padding: 1px; background-color: white">irregular&nbsp;format&nbsp;<sup>&#9013;</sup></span> <b>sample MCQs</b>.
-                    <br> <br>If your MCQ is copied from a Google Doc, and your questions are formatted as <a href="https://support.google.com/docs/answer/3300615" target="_blank">Numbered&nbsp;list</a>&nbsp;<img src="numbered-list.png" id="numbered_list">, the question numbers will not be preserved in plain text. To fix this, download your Google Doc as a Word Doc or a PDF, then copy the MCQ from there.
                 </p>
                 <h2 id="ug_input_mcq_format" >Input MCQ Format</h2>
                     <p>The text consists of section header blocks and question blocks.</p>
@@ -290,7 +310,7 @@
                         <table class="label_table" id="ug_label_table" style="display:inline-block">
                             <tr id="ug_r0"> <td><input type="text" size="6" value=") "></td> <td></td> </tr>
                             <tr id="ug_r1"> <td><input type="text" size="6" value=". "></td>  <td onclick="ug_label_table.firstElementChild.removeChild(ug_r1)">&nbsp;&minus;&nbsp;</td> </tr>
-                            <tr id="ug_r1"> <td><input type="text" size="6" value=" "></td>  <td onclick="ug_label_table.firstElementChild.removeChild(ug_r1)">&nbsp;&minus;&nbsp;</td> </tr>
+                            <tr id="ug_r2"> <td><input type="text" size="6" value=" "></td>  <td onclick="ug_label_table.firstElementChild.removeChild(ug_r2)">&nbsp;&minus;&nbsp;</td> </tr>
                             <tr> <td colspan="2" onclick="addRow(ug_label_table)"> + </td> </tr>
                         </table>
                         <div>
