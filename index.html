@@ -5,10 +5,10 @@
     <title>Shuffle MCQ</title>
     <link rel="stylesheet" href="style.css">
     <link rel='icon' href='favicon.ico' type='image/x-icon'/>
-    <meta property="og:url" content="http://shufflemcq.com" />
+    <meta property="og:url" content="https://www.shufflemcq.com" />
     <meta property="og:title" content="Shuffle MCQ" />
     <meta property="og:description" content="a tool for creating multiple versions of the same quiz" />
-    <meta property="og:image" content="http://www.shufflemcq.com/logo.jpeg" />
+    <meta property="og:image" content="https://www.shufflemcq.com/logo.jpeg" />
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="627">
     <meta charset="UTF-8">
@@ -87,7 +87,7 @@
                     <br>
                     <select name="input_mode" id="input_mode">
                         <option value="plain">paste as plain text</option>
-                        <option>enable images, tables, and lettered lists</option>
+                        <option>enable images, tables, lists</option>
                     </select>
                 </div>
             </div>
@@ -215,7 +215,9 @@
 
         <div class="header">
             <button id="user_guide_button" onclick="toggle(user_guide)">&#10005;</button>
-            <img id="youtube" src="youtube-logo.svg">
+            <a href="https://www.youtube.com/watch?v=-akzkyyHflk">
+                <img id="youtube" src="youtube-logo.svg">
+            </a>
             <div id="border_mimic"></div>
         </div>
 
@@ -255,11 +257,11 @@
                 <p id="ug_note_1" class="note">
                     If you need to preserve an image or a table, open 
                     <span onclick="goToStep(1); toggle(sample_mcq_div, 'block', false); toggle(input_format, 'flex', false); toggle(input_mode_div, 'block', false);"><span class="link_mimic">Input&nbsp;MCQ&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>
-                    and select <span style="border: 1px solid black; padding: 1px; background-color: white">enable&nbsp;images,&nbsp;tables,&nbsp;and&nbsp;lettered&nbsp;lists&nbsp;<sup>&#9013;</sup></span>
+                    and select <span style="border: 1px solid black; padding: 1px; background-color: white">enable&nbsp;images,&nbsp;tables,&nbsp;lists&nbsp;<sup>&#9013;</sup></span>
                     under <b>Input mode</b>. This mode works best when pasting from a Google Doc.
                     <br><br>
                     If your MCQ is copied from a Google Doc, and your answers are formatted as <a href="https://support.google.com/docs/answer/3300615" target="_blank">Numbered&nbsp;list</a>&nbsp;<img src="numbered-list.png" id="numbered_list">, the answer labels will not be preserved in the plain text mode.
-                    The <span style="border: 1px solid black; padding: 1px; background-color: white">enable&nbsp;images,&nbsp;tables,&nbsp;and&nbsp;lettered&nbsp;lists&nbsp;<sup>&#9013;</sup></span> mode resolves this.
+                    The <span style="border: 1px solid black; padding: 1px; background-color: white">enable&nbsp;images,&nbsp;tables,&nbsp;lists&nbsp;<sup>&#9013;</sup></span> mode resolves this.
                     If your MCQ is copied from a Word Doc or a PDF, numbered/lettered lists will work in the plain text mode.
                     <br><br>
                     You can also add formatting manually with HTML. To view an example, open
