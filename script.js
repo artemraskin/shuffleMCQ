@@ -7,7 +7,7 @@ function handlePaste (e)
     e.preventDefault();
 
     pasted.innerHTML = (e.clipboardData).getData('text/html') || (e.clipboardData).getData('text/plain');
-
+    
     for (const el of pasted.querySelectorAll('img'))
     {
         const counter = parseInt(images_counter.innerHTML) + 1;
@@ -36,13 +36,18 @@ function handlePaste (e)
 
     for (const el of pasted.querySelectorAll('ol'))
     {
-        const listItems = el.querySelectorAll('li[style*="list-style-type:upper-alpha"]');
-
-        let letterCode = 'A'.charCodeAt(0);
-
-        listItems.forEach((li, index) => {
-            const letter = String.fromCharCode(letterCode + index);
+        const letteredItems = el.querySelectorAll('li[style*="list-style-type:upper-alpha"], li[style*="list-style-type:lower-alpha"]');
+        const letterCode = 'A'.charCodeAt(0);
+        letteredItems.forEach((li, index) => {
+            if (li.parentElement != el) return;
+            const letter = String.fromCharCode(index + letterCode);
             li.textContent = letter + ". " + li.textContent;
+        });
+
+        const numberedItems = el.querySelectorAll('li[style*="list-style-type:decimal"]');
+        numberedItems.forEach((li, index) => {
+            if (li.parentElement != el) return;
+            li.textContent = index + 1 + ". " + li.textContent;
         });
     }
 
@@ -67,7 +72,7 @@ function parseMcq()
 {
     const userInput = input_mcq.value.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
 
-    if (!userInput) return select(input_mcq);
+    if (!userInput) return input_mcq.select();
 
     reset('parsed_mcq');
     let previousRow;
@@ -743,8 +748,8 @@ function enterSampleMcq()
     '(2) Select all characters who were secretly Sith Lords.  \n'+
     'A. Chancellor Palpatine\n'+
     'B. Mace Windu\n'+
-    'C. Chancellor Valorum\n'+
-    'D. Jar Jar Binks\n'+
+    'C. Jar Jar Binks\n'+
+    'D. Chancellor Valorum\n'+
     '\n'+
     'The questions in this section refer to the Simpsons.\n'+
     '\n'+
@@ -774,14 +779,14 @@ function enterSampleMcq()
     '    (A Chancellor\n'+
     'Palpatine\n'+
     '      b.    Mace Windu\n'+
-    'C.  Chancellor Valorum\n'+
-    'd. Jar Jar Binks\n'+
+    'C.  Jar Jar Binks\n'+
+    'd. Chancellor Valorum\n'+
     '\n'+
     '2)  [This will create error in answer key] Select <u><b><i>all</i></b></u> characters who were secretly Sith Lords.  \n'+
     '    (A Chancellor Palpatine\n'+
     '      b.    Mace Windu\n'+
-    'C.  Chancellor Valorum\n'+
-    'd. Jar Jar Binks\n'+
+    'C.  Jar Jar Binks\n'+
+    'd. Chancellor Valorum\n'+
     '\n'+
     '  The questions in this section refer to the Simpsons.\n'+
     '\n'+
@@ -892,7 +897,7 @@ function toggle(element, display='block', hide=true)
     {
         parsed_mcq.style.display = 'none';
         border_mimic.style.display = 'block';
-        user_guide_button.innerHTML = '&#10005;';
+        user_guide_button.innerHTML = '&#10005;'; // ✕
         user_guide_button.classList.remove('user_guide_tooltip');
     }
 }
@@ -936,7 +941,7 @@ function goToStep(step)
         input_mcq_div.style.display = 'block';
         input_mcq_div_nav.classList.add('active');
         parse_mcq_button.style.display = 'block';
-        select(input_mcq);
+        input_mcq.select();
     }
 
     if (step === 2)
@@ -998,15 +1003,6 @@ function addRow(label_table)
     row.setAttribute('id', rowId);
     const lastRow = label_table.rows[label_table.rows.length - 1];
     label_table.children[0].insertBefore(row, lastRow);
-}
-
-function select(element)
-{
-    var range = document.createRange();
-    range.selectNodeContents(element);
-    var selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
 }
 
 //Show error message to users with IE browsers
