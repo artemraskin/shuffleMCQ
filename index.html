@@ -151,7 +151,7 @@
             <div class="settings">
                 <img src="gear-solid.svg" alt="settings" class="settings_gear" id="output_settings_gear" onclick="toggle(output_format); toggle(renumber_questions_div);">
                 <div id="renumber_questions_div">
-                    <button id="renumber_questions" onclick="renumberQuestions()" disabled>Renumber questions</button><br>
+                    <button id="renumber_questions" onclick="renumberQuestions()">Renumber questions</button> starting at <input id="renumber_questions_start" type="number" value="1" onchange="renumberQuestions()"><br>
                 </div>
                 <div id="output_format">
                     <p><b>Question format</b></p>
@@ -258,7 +258,7 @@
                     If you need to preserve an image or a table, open 
                     <span onclick="goToStep(1); toggle(sample_mcq_div, 'block', false); toggle(input_format, 'flex', false); toggle(input_mode_div, 'block', false);"><span class="link_mimic">Input&nbsp;MCQ&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>
                     and select <span style="border: 1px solid black; padding: 1px; background-color: white">enable&nbsp;images,&nbsp;tables,&nbsp;lists&nbsp;<sup>&#9013;</sup></span>
-                    under <b>Input mode</b>. This mode works best when pasting from a Google Doc.
+                    under <b>Input mode</b>. This mode works best when pasting from a Google Doc. Inserted images will be preserved, but Google Drawings will not be.
                     <br><br>
                     If your MCQ is copied from a Google Doc, and your answers are formatted as <a href="https://support.google.com/docs/answer/3300615" target="_blank">Numbered&nbsp;list</a>&nbsp;<img src="numbered-list.png" id="numbered_list">, the answer labels will not be preserved in the plain text mode.
                     The <span style="border: 1px solid black; padding: 1px; background-color: white">enable&nbsp;images,&nbsp;tables,&nbsp;lists&nbsp;<sup>&#9013;</sup></span> mode resolves this.
