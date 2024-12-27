@@ -5,7 +5,7 @@ function handlePaste (e)
 {
     if (input_mode.value == 'plain') return;
     e.preventDefault();
-
+    
     pasted.innerHTML = (e.clipboardData).getData('text/html') || (e.clipboardData).getData('text/plain');
     
     for (const el of pasted.querySelectorAll('img'))
@@ -71,7 +71,7 @@ function handlePaste (e)
 function parseMcq()
 {
     const userInput = input_mcq.value.trim().replace(/[\u000a\u000b\u000c\u000d\u0085\u2028\u2029]/g, "\n"); //replace various Unicode codes for new line with a regular new line
-
+    
     if (!userInput) return input_mcq.select();
 
     reset('parsed_mcq');
@@ -85,7 +85,6 @@ function parseMcq()
     updateMiddleButtons(firstErrorRow);
     createOutput();
     showGoToStep(2);
-    renumber_questions.removeAttribute('disabled');
 
     //helper functions:
 
@@ -110,7 +109,7 @@ function parseMcq()
         {
             if (index>0 && previousRow.classList.contains('section')) //merge consecutive section header blocks into one section header
             {
-                previousRow.children[1].children[0].innerHTML += "<br><br>" + block;
+                previousRow.children[2].children[0].innerHTML += "<br><br>" + restoreHtml (block);
             }
             else
             {
@@ -150,6 +149,7 @@ function parseMcq()
         const textDiv = document.createElement('div'); //need div because can't style height of td
         const keyTd = document.createElement('td');
         const lockTd = document.createElement('td');
+        const numTd = document.createElement('td');
 
         if (label==='S') row.classList.add('section');
         if (label==='') row.classList.add('empty_line');
@@ -162,6 +162,7 @@ function parseMcq()
         textDiv.innerHTML = restoreHtml (text);
         textTd.append(textDiv);
         labelTd.textContent = label;
+        if (isNum(label)) numTd.textContent = label;
 
         if (row.classList.contains('answer'))
         {
@@ -174,30 +175,31 @@ function parseMcq()
         }
 
         row.append(labelTd);
+        row.append(numTd);
         row.append(textTd);
         row.append(keyTd);
         row.append(lockTd);
         parsed_mcq.append(row);
 
         return row;
+    }
 
-        function restoreHtml (text)
+    function restoreHtml (text)
+    {            
+        text = text.replaceAll('\n', "<br>");
+
+        function replacer(match)
         {
-            text = text.replaceAll('\n', "<br>");
+            const pastedHtml = document.getElementById(match);
+            return pastedHtml ? pastedHtml.outerHTML : match;
+        }    
+        text = text.replaceAll('TАBLE ','table'); //cyrillic А
+        text = text.replaceAll (/table\d+/g, replacer);
+        //replace tables before images, in case image inside table
+        text = text.replaceAll('IMАGE ','image'); //cyrillic А
+        text = text.replaceAll (/image\d+/g, replacer);
 
-            function replacer(match)
-            {
-                const pastedHtml = document.getElementById(match);
-                return pastedHtml ? pastedHtml.outerHTML : match;
-            }    
-            text = text.replaceAll('TАBLE ','table'); //cyrillic А
-            text = text.replaceAll (/table\d+/g, replacer);
-            //replace tables before images, in case image inside table
-            text = text.replaceAll('IMАGE ','image'); //cyrillic А
-            text = text.replaceAll (/image\d+/g, replacer);
-
-            return text;
-        }
+        return text;
     }
 
     function toRegex(label_table, mode=false)
@@ -330,7 +332,7 @@ function parseAk()
     const rowsMcq = Array.from(parsed_mcq.children);
     const answers = parsed_mcq.getElementsByClassName('answer');
     let numbers=[];
-    for (const answer of answers) answer.children[2].firstElementChild.checked = false; //reset all key-column checkboxes to not checked
+    for (const answer of answers) answer.children[3].firstElementChild.checked = false; //reset all key-column checkboxes to not checked
     reset('parsed_ak');
 
     //nested forEach loops: go through each rawKey and compare it to each parsed_mcq row
@@ -382,7 +384,7 @@ function parseAk()
                     const letter = rowsMcq[id].children[0].textContent;
                     if (correctAnswers.includes(letter))
                     {
-                        rowsMcq[id].children[2].firstElementChild.checked = true;
+                        rowsMcq[id].children[3].firstElementChild.checked = true;
                         correctAnswers = correctAnswers.filter(answer => answer !== letter); //remove letter from correctAnswers
                     }
                     if (!rowsMcq[id].classList.contains('answer')) break;
@@ -422,7 +424,7 @@ function shuffle(mode)
 
         const sectionHeaders = Array.from(parsed_mcq.getElementsByClassName('section'));
         sectionHeaders.forEach(function(header,index){
-            if (header.children[3].firstElementChild.checked) //user locks a section by checking the lock-column checkbox next to its header
+            if (header.children[4].firstElementChild.checked) //user locks a section by checking the lock-column checkbox next to its header
             {
                 lockedIndexes.push(index);
             }
@@ -448,7 +450,7 @@ function shuffle(mode)
             const lockedIndexes = [0]; //section[0] = [header, emptyrow] so should be auto-locked
             section.forEach(function(question,index){
                 if (index == 0) return; // skip section header
-                if (question[0].children[3].firstElementChild.checked) //user locks a question by checking the lock-column checkbox next to it
+                if (question[0].children[4].firstElementChild.checked) //user locks a question by checking the lock-column checkbox next to it
                 {
                     lockedIndexes.push(index);
                 }
@@ -479,7 +481,7 @@ function shuffle(mode)
             questionBlock.forEach(function(answer, index)
             {
                 if (index == question || index == emptyline) return;
-                if (answer.children[3].firstElementChild.checked)
+                if (answer.children[4].firstElementChild.checked)
                 {
                     lockedIndexes.push(index);
                 }
@@ -631,7 +633,7 @@ function createOutput()
 
         if (row.classList.contains('section'))
         {
-            text = row.children[1].children[0].innerHTML; //in order to include <br>
+            text = row.children[2].children[0].innerHTML; //in order to include <br>
         }
 
         if (row.classList.contains('empty_line'))
@@ -641,14 +643,14 @@ function createOutput()
 
         if (row.classList.contains('question'))
         {
-            text = beforeQ + row.children[0].textContent + afterQ + row.children[1].children[0].innerHTML; //allows user to put HTML into input_mcq
+            text = beforeQ + row.children[0].textContent + afterQ + row.children[2].children[0].innerHTML; //allows user to put HTML into input_mcq
             answerKey += parseRowForKey(index); //add correctAnswers for this question to answerKey
         }
 
         if (row.classList.contains('answer'))
         {
             const letter = a_lowercase.value ? row.children[0].textContent.toLowerCase() : row.children[0].textContent;
-            text = beforeA + letter + afterA + row.children[1].children[0].innerHTML;
+            text = beforeA + letter + afterA + row.children[2].children[0].innerHTML;
         }
         
         output.insertAdjacentHTML('beforeend', text+'<br>')
@@ -675,7 +677,7 @@ function createOutput()
 
         for (const row of answers)
         {
-            if (row.children[2].firstElementChild.checked)
+            if (row.children[3].firstElementChild.checked)
             {
                 correctAnswers += row.children[0].textContent;
             }
@@ -700,9 +702,11 @@ function renumberQuestions()
 {
     const questionRows = Array.from(parsed_mcq.getElementsByClassName('question'));
     questionRows.forEach(function(item,index){
-        item.children[0].textContent = index+1;
+        item.children[0].textContent = +renumber_questions_start.value + index;
     })
-    renumber_questions.setAttribute('disabled', true);
+    document.querySelectorAll('#parsed_mcq th:nth-child(2), #parsed_mcq td:nth-child(2)').forEach(cell => {
+        cell.style.display = 'table-cell';
+    });
     createOutput();
 }
 
@@ -713,6 +717,7 @@ function reset(table_name)
         parsed_mcq.outerHTML = '<table id="parsed_mcq" style="display:table">'+
                                     '<tr id="0">'+
                                         '<th style="width:45px;">label</th>'+
+                                        '<th style="width:45px;">old #</th>'+
                                         '<th onclick="toggleView()" class="minimal">text</th>'+
                                         '<th style="width:36px">key</th>'+
                                         '<th style="width:36px">lock</th>'+
