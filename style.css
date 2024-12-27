@@ -78,14 +78,6 @@
     margin-top: 5px;
 }
 
-#renumber_questions:hover::after {
-    content: ' without shuffling (e.g. 9,4,7 \2192  1,2,3)' /* 9,4,7 →  1,2,3 */
-}
-/* #output_div button {
-    cursor: pointer;
-}
-*/
-
 #copy_button_1,
 #copy_button_2 {
     margin: 0 0 8px 8px;
@@ -158,18 +150,24 @@ input {
     min-width: 4ch;
 }
 #ak_format .input,
-#output_format input {
+#output_format input,
+#renumber_questions_start{
     display: inline-block;
     outline: 1px solid black;
 }
 .input:focus,
-#output_format input:focus{
+#output_format input:focus,
+#renumber_questions_start:focus {
     outline: 2px solid #025ecc !important;
 }
 .label_table td.input:focus {
     outline-offset: -0.5px;
     position: relative;
     z-index: 1;
+}
+#renumber_questions_start {
+    width: 4ch;
+    background-image: none;
 }
 
 #left_div select,
@@ -317,15 +315,18 @@ input {
     top: var(--header_height);
     outline: solid black 2px; /*border conflicts with position:sticky and border-collapse:collapse*/
 }
-#parsed_mcq th:nth-child(2){
+#parsed_mcq th:nth-child(2),
+#parsed_mcq td:nth-child(2){
+    display: none;
+}
+#parsed_mcq th:nth-child(3){
     padding-left: calc(3ch - 2px);
     color: var(--bluelink);
 }
-#parsed_mcq th:nth-child(2):hover{
+#parsed_mcq th:nth-child(3):hover{
     font-size: 0;
-    /*cursor: pointer;*/
 }
-#parsed_mcq th:nth-child(2):hover:before {
+#parsed_mcq th:nth-child(3):hover:before {
     content: 'switch view';
     text-transform: lowercase;
     font-variant: normal;
@@ -350,7 +351,7 @@ input {
     transform: translateY(-1.25px);
     scale: 140%;
 }
-#parsed_mcq td:nth-child(2)
+#parsed_mcq td:nth-child(3)
 {
     white-space: nowrap;
     overflow: clip;
@@ -363,8 +364,8 @@ input {
     max-height: none;
     white-space: pre-wrap;
 }
-#parsed_mcq td:nth-child(3),
-#parsed_mcq td:nth-child(4) {
+#parsed_mcq td:nth-child(4),
+#parsed_mcq td:nth-child(5) {
     text-align: center;
 }
 .empty_line {
