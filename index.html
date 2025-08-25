@@ -83,7 +83,10 @@
                     </div>
                 </div>
                 <div id="input_mode_div"><span>
-                    <label for="input_mode"><b>Input mode</b></label>
+                    <label for="input_mode"><b>
+                        Input
+                        <a href="#ug_step_1" onclick="toggle(user_guide, 'block', false); toggle(ug_note_1, 'block', false)" >mode</a>
+                    </b></label>
                     <br>
                     <select name="input_mode" id="input_mode">
                         <option value="plain">paste as plain text</option>
@@ -118,12 +121,18 @@
                     <b>sample answer key</b>
                 </span></div>
                 <div id="ak_format">
-                    <p><b>Question format</b></p>
+                    <p><b>
+                        Question
+                        <a href="#ug_bulk_entry" onclick="toggle(user_guide, 'block', false)" >format</a>
+                    </b></p>
                     <span class="input" role="textbox" id="ak_q_prefix" onblur="parseAk()" contenteditable></span>
                     <span>+ Q&nbsp;number + </span>
                     <span class="input" role="textbox" id="ak_q_postfix" onblur="parseAk()" contenteditable></span>
                     <br><br>
-                    <p><b>Answer format</b></p>
+                    <p><b>
+                        Answer
+                        <a href="#ug_bulk_entry" onclick="toggle(user_guide, 'block', false); toggle(ug_note_4, 'block', false)" >format</a>
+                    </b></p>
                     <span class="input" role="textbox" id="ak_a_prefix" onblur="parseAk()" contenteditable></span>
                     <span> + </span>
                     <select id="firstLetterOnly" onblur="parseAk()">
@@ -151,10 +160,15 @@
             <div class="settings">
                 <img src="gear-solid.svg" alt="settings" class="settings_gear" id="output_settings_gear" onclick="toggle(output_format); toggle(renumber_questions_div);">
                 <div id="renumber_questions_div">
-                    <button id="renumber_questions" onclick="renumberQuestions()">Renumber questions</button> starting at <input id="renumber_questions_start" type="number" value="1" onchange="renumberQuestions()"><br>
+                    <button id="renumber_questions" onclick="renumberQuestions()">Renumber questions</button>
+                    starting at <input id="renumber_questions_start" type="number" value="1" onchange="renumberQuestions()">&nbsp;
+                    <a href="#ug_shuffle_sections" style="text-decoration:none;"><sup onclick="toggle(user_guide, 'block', false); toggle(ug_note_5, 'block', false)" class="asterisk">*</sup></a><br>
                 </div>
                 <div id="output_format">
-                    <p><b>Question format</b></p>
+                    <p><b>
+                        Question
+                        <a href="#ug_output" onclick="toggle(user_guide, 'block', false)" >format</a>
+                    </b></p>
                     <input type="text" size="6" list="dl_before_q" id="before_q" value="" onblur="createOutput()" onfocus="clearValue('before_q')">
                     <datalist id="dl_before_q">
                         <option value="(">
@@ -170,7 +184,9 @@
                     </datalist>
                     <span>+ Q&nbsp;text</span>
                     <br><br>
-                    <p><b>Answer format</b></p>
+                    <p><b>Answer
+                        <a href="#ug_output" onclick="toggle(user_guide, 'block', false)" >format</a>
+                    </b></p>
                     <input type="text" size="6" list="dl_before_a" id="before_a" value="" onblur="createOutput()" onfocus="clearValue('before_a')">
                     <datalist id="dl_before_a">
                         <option value="(">
@@ -357,13 +373,28 @@
                 <h2 id="ug_bulk_entry">Bulk Entry</h2>
                     <p>Alternatively, you can paste your entire answer key into the <span onclick="goToStep(2)" class="link_mimic">Answer Key text area</span>.</p>
                     <p>Any format works, so long as the key contains the question number followed by its answer letter(s). Symbols other than <span class="highlight">0123456789</span> and <span class="highlight">ABCDE</span> and <span class="highlight">abcde</span> will be ignored.</p>
-                    <p>If your key includes numbers that are not question numbers or letters that are not answer letters, you can configure that in the <span onclick="goToStep(2); toggle(sample_ak_div, 'block', false); toggle(ak_format, 'block', false);"><span class="link_mimic">Answer&nbsp;Key&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>.</p>
+                    <p>If your key includes numbers that are not question numbers or letters that are not answer letters, you can configure<sup onclick="toggle(ug_note_4)" class="asterisk">*</sup> that in the <span onclick="goToStep(2); toggle(sample_ak_div, 'block', false); toggle(ak_format, 'block', false);"><span class="link_mimic">Answer&nbsp;Key&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>.</p>
+                    <p id="ug_note_4" class="note">
+                        Selecting  <span style="border: 1px solid black; padding: 1px; background-color: white">A&nbsp;letter(s)&nbsp;<sup>&#9013;</sup></span> instead of <span style="border: 1px solid black; padding: 1px; background-color: white">A&nbsp;letter&nbsp;<sup>&#9013;</sup></span> allows for one question to have multiple correct answer options.<br>
+                        In that scenario, if you set a <span onclick="highlightVocab('v_prefix')"><a href="#ug_vocab">prefix</a></span> or <span onclick="highlightVocab('v_postfix')"><a href="#ug_vocab">postfix</a></span> in the <b>Answer format</b>, they apply to each answer option separately. For example, if your answer options are enclosed in parentheses, (A)(B) will work, (AB) will not.
+                    </p>
                     <p>Double-check the <span style="font-variant: small-caps;">key</span> column of the <a href="#ug_validation">Parsed MCQ table</a> to verify that your answer key was parsed correctly.</p>
             <h1 id="ug_step_3"><span>Step 3: Shuffle!</span></h1>
                 <h2 id="ug_shuffle_sections">Shuffle Sections</h2>
                     <ul>
                         <li>Shuffle <span onclick="highlightVocab('v_section')"><a href="#ug_vocab">sections</a></span> within the MCQ.</li>
-                        <li>Questions will be renumbered.</li>
+                        <li>
+                            Questions will be renumbered<sup onclick="toggle(ug_note_5)" class="asterisk">*</sup>.
+                            <p id="ug_note_5" class="note">
+                                The <span style="font-variant: small-caps;">old #</span> column will then appear in the Parsed MCQ table to show the original question numbers.
+                                <br><br>
+                                If your questions are out of order, you can renumber them without shuffling by opening
+                                <span onclick="goToStep(3); toggle(renumber_questions_div, 'block', false);toggle(output_format, 'block', false);"><span class="link_mimic">Output&nbsp;settings</span>&nbsp;<img src="gear-solid.svg" id="little_gear"></span>
+                                and clicking <span style="white-space: nowrap;"><button>Renumber questions</button>.</span>
+                                <br>
+                                For example, if you select starting at <span style="border: 1px solid black; padding: 1px; background-color: white">2&nbsp;&nbsp;</span>, questions 9, 4, 22, 7 will be renumbered as 2, 3, 4, 5.
+                            </p>
+                        </li>
                         <li>Order of questions within each section will not change.</li>
                         <li>Order of answers within each question block will not change.</li>
                     </ul>
