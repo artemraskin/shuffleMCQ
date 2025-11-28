@@ -3,7 +3,7 @@
 //custom convert pasted HTML to plain text, then paste it into input_mcq
 function handlePaste (e)
 {
-    if (input_mode.value == 'plain') return;
+    if (input_mode.value === 'plain') return;
     e.preventDefault();
     
     pasted.innerHTML = (e.clipboardData).getData('text/html') || (e.clipboardData).getData('text/plain');
@@ -74,7 +74,7 @@ function parseMcq()
     
     if (!userInput) return input_mcq.select();
 
-    reset('parsed_mcq');
+    reset('parsed_mcq', 'none');
     let previousRow;
     let rowId = 0;
 
@@ -94,7 +94,7 @@ function parseMcq()
 
         if (startsWithQuestionNumber.test(block))
         {
-            if (index==0) //second row must be a section header, otherwise splitParsedMcqIntoSections() breaks
+            if (index===0) //second row must be a section header, otherwise splitParsedMcqIntoSections() breaks
             {
                 previousRow = createRow('S', '');
                 createRow('', '');
@@ -145,11 +145,18 @@ function parseMcq()
     {        
         const row = document.createElement('tr');
         const labelTd = document.createElement('td');
+        const oldTd = document.createElement('td');
         const textTd = document.createElement('td');
         const textDiv = document.createElement('div'); //need div because can't style height of td
         const keyTd = document.createElement('td');
         const lockTd = document.createElement('td');
-        const numTd = document.createElement('td');
+
+        labelTd.classList.add('label_td');
+        oldTd.classList.add('old_td');
+        textTd.classList.add('text_td');
+        textDiv.classList.add('text_div');
+        keyTd.classList.add('key_td');
+        lockTd.classList.add('lock_td');
 
         if (label==='S') row.classList.add('section');
         if (label==='') row.classList.add('empty_line');
@@ -158,11 +165,10 @@ function parseMcq()
 
         rowId++;
         row.id = rowId;
-        textDiv.classList.add('parsed_mcq_cell_div');
         textDiv.innerHTML = restoreHtml (text);
         textTd.append(textDiv);
         labelTd.textContent = label;
-        if (isNum(label)) numTd.textContent = label;
+        if (isNum(label)) oldTd.textContent = label;
 
         if (row.classList.contains('answer'))
         {
@@ -175,7 +181,7 @@ function parseMcq()
         }
 
         row.append(labelTd);
-        row.append(numTd);
+        row.append(oldTd);
         row.append(textTd);
         row.append(keyTd);
         row.append(lockTd);
@@ -184,7 +190,7 @@ function parseMcq()
         return row;
     }
 
-    function restoreHtml (text)
+    function restoreHtml(text)
     {            
         text = text.replaceAll('\n', "<br>");
 
@@ -208,7 +214,7 @@ function parseMcq()
         rows.pop(); //remove the + row
         const formats = [];
         for (const row of rows) formats.push(replaceSpecialChars(row.children[0]));
-        if (mode=='non-capturing') return '\(?:' + formats.join('\|') + '\)';
+        if (mode==='non-capturing') return '\(?:' + formats.join('\|') + '\)';
         return '\(' + formats.join('\|') + '\)';
     }
 
@@ -308,11 +314,11 @@ function isNum(label)
 }
 
 //process question/answer format settings
-function replaceSpecialChars(input)
+function replaceSpecialChars(input, escape=true)
 {
     input = input.value || input.textContent;
+    if (escape) input = input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') //add backslash to escape special regex characters
     return input
-        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&') //add backslash to escape special regex characters
         .replaceAll('\u21B5', '\\n') //↵
         .replaceAll('\u2026', '\\s*') //…
         .replaceAll('\u21E5', '\\t') //⇥
@@ -325,30 +331,35 @@ function parseAk()
 {
     const userInput = input_ak.value.toUpperCase();
     if(!userInput) return input_ak.select();
+    
+    const preNumPost = replaceSpecialChars(ak_q_prefix) + '\\d{1,3}' + replaceSpecialChars(ak_q_postfix);
+    const rawKeyRegex = new RegExp(preNumPost + '.+?' + '(?=' + preNumPost + '|$)', 'gis');
+    const rawKeys = (userInput+' ').match(rawKeyRegex)|| [userInput]; //Split userInput into array of rawKey strings. Each rawKey is one number followed by text (or by ' ' if userInput ends with a number)
 
-    const before = ak_q_prefix.textContent ? replaceSpecialChars(ak_q_prefix) : '\\D';
-    const beforeQuestionNum = new RegExp(before + '(?=' + '\\d{1,3}' + replaceSpecialChars(ak_q_postfix) + ')', 'gi');
-    const rawKeys = (userInput+' ').split(beforeQuestionNum).filter(Boolean) || [userInput]; //Split userInput into array of rawKey strings. Each rawKey is one number followed by text (or by ' ' if userInput ends with a number)
     const rowsMcq = Array.from(parsed_mcq.children);
     const answers = parsed_mcq.getElementsByClassName('answer');
-    let numbers=[];
+    let numbers = [];
     for (const answer of answers) answer.children[3].firstElementChild.checked = false; //reset all key-column checkboxes to not checked
     reset('parsed_ak');
 
     //nested forEach loops: go through each rawKey and compare it to each parsed_mcq row
-    rawKeys.forEach(function(rawKey){        
+    rawKeys.forEach(function(rawKey){
         const rowAk = document.createElement('tr');
         const questionTdAk = document.createElement('td');
         const answerTdAk = document.createElement('td');
         const errorMessageTdAk = document.createElement('td');
-        const number = (rawKey.match(/\d{1,3}/) || [false])[0] || '';
+
+        const numKeyRegex = new RegExp('('+preNumPost+')' + '(.*)', 'is');
+        const number = ((rawKey.match(numKeyRegex)||[,false])[1] || '')
+            .replace(replaceSpecialChars(ak_q_prefix, false).toUpperCase(), '')
+            .replace(replaceSpecialChars(ak_q_postfix, false).toUpperCase(), '');
         questionTdAk.textContent = number;
-        const key = rawKey.replace(new RegExp('\\d{1,3}' + replaceSpecialChars(ak_q_postfix), 'i'), '');
+        const key = ((rawKey.match(numKeyRegex)||[,,false])[2] || '');
 
         let correctAnswers = [];
         for (const letter of ['A','B','C','D','E'])
         {
-            if (!key.includes(replaceSpecialChars(ak_a_prefix) + letter + replaceSpecialChars(ak_a_postfix))) continue;
+            if (!key.includes(replaceSpecialChars(ak_a_prefix, false) + letter + replaceSpecialChars(ak_a_postfix, false))) continue;
             correctAnswers.push(letter);
             answerTdAk.textContent+=letter;
         }
@@ -375,7 +386,7 @@ function parseAk()
         rowsMcq.forEach(function(rowMcq, qRowId){
             if (!rowMcq.classList.contains('question')) return;
 
-            if (rowMcq.children[0].textContent == number) //for each Mcq row that has a question, check if it matches the number in the current rawKey
+            if (rowMcq.children[0].textContent === number) //for each Mcq row that has a question, check if it matches the number in the current rawKey
             {
                 matchCount++;
 
@@ -418,6 +429,9 @@ function shuffle(mode)
     //shuffle sections in the parsed_mcq table, keep question order within each section intact
     function shuffleSections()
     {
+        let ak;
+        if (lock_ak.checked) ak = rememberLockedAk();
+
         const sectionsByRow = splitParsedMcqIntoSections();
 
         const lockedIndexes = [];
@@ -432,24 +446,28 @@ function shuffle(mode)
 
         shuffleArray(sectionsByRow, lockedIndexes);
         
-        reset('parsed_mcq');
+        reset('parsed_mcq', 'table-cell');
 
         const rows = sectionsByRow.flat(1); //sectionsByRow array has a depth of 1
         for (const row of rows) parsed_mcq.append(row);
 
         renumberQuestions(); // question #s are out of order because sections were shuffled
+        if (lock_ak.checked) restoreLockedAk(ak);
         createOutput();
     }
 
     //shuffle questions in the parsed_mcq table within their respective sections, keep answer order within each question intact
     function shuffleQuestions()
     {
+        let ak;
+        if (lock_ak.checked) ak = rememberLockedAk();
+
         const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
 
         sectionsByQuestion.forEach(function(section){
             const lockedIndexes = [0]; //section[0] = [header, emptyrow] so should be auto-locked
             section.forEach(function(question,index){
-                if (index == 0) return; // skip section header
+                if (index === 0) return; // skip section header
                 if (question[0].children[4].firstElementChild.checked) //user locks a question by checking the lock-column checkbox next to it
                 {
                     lockedIndexes.push(index);
@@ -458,12 +476,13 @@ function shuffle(mode)
             shuffleArray(section, lockedIndexes);
         })
 
-        reset('parsed_mcq');
+        reset('parsed_mcq', 'table-cell');
 
         const rows = sectionsByQuestion.flat(2); //sectionsByQuestion has a depth of 2
         for (const row of rows) parsed_mcq.append(row);
   
         renumberQuestions(); //question #s are out of order because questions were shuffled
+        if (lock_ak.checked) restoreLockedAk(ak);
         createOutput();
     }
 
@@ -480,7 +499,7 @@ function shuffle(mode)
             const lockedIndexes = [question, emptyline];
             questionBlock.forEach(function(answer, index)
             {
-                if (index == question || index == emptyline) return;
+                if (index === question || index === emptyline) return;
                 if (answer.children[4].firstElementChild.checked)
                 {
                     lockedIndexes.push(index);
@@ -489,7 +508,11 @@ function shuffle(mode)
             shuffleArray(questionBlock, lockedIndexes);  
         })
 
-        reset('parsed_mcq');
+        const oldThDisplay =
+            (typeof old_th !== 'undefined') && (old_th.style.display === 'table-cell')
+            ? 'table-cell'
+            : 'none';
+        reset('parsed_mcq', oldThDisplay);
 
         const rows = tableByQuestion.flat(1);
         for (const row of rows) parsed_mcq.append(row);
@@ -526,68 +549,6 @@ function shuffle(mode)
         array = unlockedElements;
     }
 
-    //parsed_mcq=[[S],[S],[S]...]   [S]=[row,row,row,row...]
-    function splitParsedMcqIntoSections()
-    {
-        const rows = Array.from(parsed_mcq.children);
-        const sectionsByRow = [];
-
-        rows.forEach(function(row,index){
-            if (index==0) return; //skip table header
-
-            if (row.classList.contains('section')) //if row is section header, create new section array
-            {
-                const section = [];
-                section.push(row);
-                sectionsByRow.push(section);
-            }
-            else //if row is a question/answer/empty line, add it to the current section array
-            {
-                const currentSectionIndex = sectionsByRow.length-1;
-                sectionsByRow[currentSectionIndex].push(row);
-            }
-        })
-        return sectionsByRow;
-    }
-
-    //[S]=[row,row,row,row...]   =>   [S]=[[header],[Q],[Q]...] [Q]=[row,row,row,row...]
-    function splitIntoQuestions(section)
-    {
-        const questions = [];
-        const sectionHeader = [section[0],section[1]]; //[header, emptyrow]
-        questions.push(sectionHeader);
-
-        section.forEach(function(row, index){
-            if (index==0 || index==1) return; //skip sectionHeader
-
-            if (row.classList.contains('question')) //if row is a question, create new question array
-            {
-                const question = [];
-                question.push(row);
-                questions.push(question);
-            }
-            else //if row is an answer/empty line, add it to the current question array
-            {
-                const currentQuestionIndex = questions.length-1;
-                questions[currentQuestionIndex].push(row);
-            }
-        })
-
-        return questions;
-    }
-
-    //parced_mcq=[[S],[S],[S]...]  [S]=[[header],[Q],[Q]...]  [Q]=[row,row,row,row...]
-    function splitParsedMcqIntoSectionsIntoQuestions()
-    {
-        const sectionsByRow = splitParsedMcqIntoSections();
-        const sectionsByQuestion = [];
-
-        sectionsByRow.forEach(function(section){
-            sectionsByQuestion.push(splitIntoQuestions(section));  
-        })
-        return sectionsByQuestion;
-    }
-
     //overwrite letter label for first answer under each question with 'A', second letter label with 'B' etc.
     function reletterAnswers()
     {
@@ -611,6 +572,164 @@ function shuffle(mode)
             reletterAnswer(row, letterIndex);
         }
     }
+
+    function rememberLockedAk()
+    {
+        if (!isAkLockable()) return;
+        const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
+        const tableByQuestion = sectionsByQuestion.flat(1);
+        const ak = [];
+
+        for (const questionBlock of tableByQuestion) {
+            if (questionBlock[0].classList.contains('section')) continue;
+            const answerRows = questionBlock.slice(1,-1); // remove question row and emptyline
+            let checkedIndex = null;
+            for (let i = 0; i < answerRows.length; i++)
+            {
+                const row = answerRows[i];
+                const checkbox = row.querySelector("td:nth-child(4) input[type='checkbox']");
+                if (checkbox && checkbox.checked)
+                {
+                    checkedIndex = i;
+                    break;
+                }
+            }
+
+            ak.push(checkedIndex);
+        }
+
+        return ak;
+    }
+
+    function restoreLockedAk (ak)
+    {
+        const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
+        const tableByQuestion = sectionsByQuestion.flat(1);
+        let questionBlockIndex = 0;
+
+        for (const questionBlock of tableByQuestion)
+        {
+            if (questionBlock[0].classList.contains('section')) continue;
+            const answerRows = questionBlock.slice(1,-1); // remove question row and emptyline
+            const correctAnswerIndex = ak[questionBlockIndex];
+
+            for (let i = 0; i < answerRows.length; i++)
+            {
+                const row = answerRows[i];
+                const checkbox = row.querySelector("td:nth-child(4) input[type='checkbox']");
+                checkbox.checked = false;
+                if (i==correctAnswerIndex) checkbox.checked = true;
+            }
+            questionBlockIndex++;
+        }
+    }
+}
+
+//parsed_mcq=[[S],[S],[S]...]   [S]=[row,row,row,row...]
+function splitParsedMcqIntoSections()
+{
+    const rows = Array.from(parsed_mcq.children);
+    const sectionsByRow = [];
+
+    rows.forEach(function(row,index){
+        if (index===0) return; //skip table header
+
+        if (row.classList.contains('section')) //if row is section header, create new section array
+        {
+            const section = [];
+            section.push(row);
+            sectionsByRow.push(section);
+        }
+        else //if row is a question/answer/empty line, add it to the current section array
+        {
+            const currentSectionIndex = sectionsByRow.length-1;
+            sectionsByRow[currentSectionIndex].push(row);
+        }
+    })
+    return sectionsByRow;
+}
+
+//[S]=[row,row,row,row...]   =>   [S]=[[header],[Q],[Q]...] [Q]=[row,row,row,row...]
+function splitIntoQuestions(section)
+{
+    const questions = [];
+    const sectionHeader = [section[0],section[1]]; //[header, emptyrow]
+    questions.push(sectionHeader);
+
+    section.forEach(function(row, index){
+        if (index===0 || index===1) return; //skip sectionHeader
+
+        if (row.classList.contains('question')) //if row is a question, create new question array
+        {
+            const question = [];
+            question.push(row);
+            questions.push(question);
+        }
+        else //if row is an answer/empty line, add it to the current question array
+        {
+            const currentQuestionIndex = questions.length-1;
+            questions[currentQuestionIndex].push(row);
+        }
+    })
+
+    return questions;
+}
+
+//parced_mcq=[[S],[S],[S]...]  [S]=[[header],[Q],[Q]...]  [Q]=[row,row,row,row...]
+function splitParsedMcqIntoSectionsIntoQuestions()
+{
+    const sectionsByRow = splitParsedMcqIntoSections();
+    const sectionsByQuestion = [];
+
+    sectionsByRow.forEach(function(section){
+        sectionsByQuestion.push(splitIntoQuestions(section));  
+    })
+    return sectionsByQuestion;
+}
+
+function isAkLockable(isLockAkChecked=true) {
+    if (!isLockAkChecked) return;
+    const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
+    if (sectionsByQuestion.length === 0) return;
+    const tableByQuestion = sectionsByQuestion.flat(1);
+    const q1Length = tableByQuestion[1].length;
+
+    for (const questionBlock of tableByQuestion.slice(2)) {
+        if (questionBlock[0].classList.contains('section')) continue;
+        if (questionBlock.length !== q1Length)
+        {
+            document.querySelector('label[for="lock_ak"]').textContent = 'Unable to lock answer key when shuffling sections/questions, because different questions have a different number of answer options.'
+            document.querySelector('label[for="lock_ak"]').style.color = 'red';
+            lock_ak.checked = false;
+            return false;
+        }
+        if (!hasExactlyOneCorrectAnswer(questionBlock))
+        {
+            document.querySelector('label[for="lock_ak"]').textContent = 'Unable to lock answer key when shuffling sections/questions, because not every question has exactly one correct answer.'
+            document.querySelector('label[for="lock_ak"]').style.color = 'red';
+            lock_ak.checked = false;
+            return false;
+        }
+    }
+    
+    document.querySelector('label[for="lock_ak"]').textContent = 'Lock answer key when shuffling sections/questions.'
+    document.querySelector('label[for="lock_ak"]').style.color = '';
+    return true;
+
+
+    function hasExactlyOneCorrectAnswer(questionBlock) {
+        let checkedCount = 0;
+        for (const row of questionBlock)
+        {
+            const checkbox = row.querySelector("td:nth-child(4) input[type='checkbox']");
+            if (checkbox && checkbox.checked)
+            {
+                checkedCount++;
+                if (checkedCount > 1) return false;
+            }
+        }
+        return checkedCount === 1;
+    }
 }
 
 //Convert parsed_mcq table to output text. Create answer key based on key-column checkboxes
@@ -627,7 +746,7 @@ function createOutput()
 
     rows.forEach(function(row, index){
 
-        if (index==0) return;//skip table header
+        if (index===0) return;//skip table header
 
         let text;//parsed_mcq row converts into this output text
 
@@ -704,23 +823,23 @@ function renumberQuestions()
     questionRows.forEach(function(item,index){
         item.children[0].textContent = +renumber_questions_start.value + index;
     })
-    document.querySelectorAll('#parsed_mcq th:nth-child(2), #parsed_mcq td:nth-child(2)').forEach(cell => {
+    document.querySelectorAll('#old_th, .old_td').forEach(cell => {
         cell.style.display = 'table-cell';
     });
     createOutput();
 }
 
-function reset(table_name)
+function reset(table_name, oldThDisplay)
 {
     if (table_name === 'parsed_mcq')
-    {
+    {   
         parsed_mcq.outerHTML = '<table id="parsed_mcq" style="display:table">'+
                                     '<tr id="0">'+
-                                        '<th style="width:45px;">label</th>'+
-                                        '<th style="width:45px;">old #</th>'+
-                                        '<th onclick="toggleView()" class="minimal">text</th>'+
-                                        '<th style="width:36px">key</th>'+
-                                        '<th style="width:36px">lock</th>'+
+                                        '<th id="label_th">label</th>'+
+                                        '<th id="old_th" style="display:'+oldThDisplay+'">old #</th>'+
+                                        '<th id="text_th" class="minimal" onclick="toggleView()">text</th>'+
+                                        '<th id="key_th">key</th>'+
+                                        '<th id="lock_th">lock</th>'+
                                     '</tr>'+
                                 '</table>';
         user_guide.style.display = 'none';
@@ -841,10 +960,10 @@ function enterSampleMcq()
     'C. Moe Szyslak\n'+
     'D. all of the above\n';
 
-    if (sample_mcq.value == 0) input_mcq.value = '';
-    if (sample_mcq.value == 1) input_mcq.value = sample1;
-    if (sample_mcq.value == 2) input_mcq.value = sample2;
-    if (sample_mcq.value == 3) input_mcq.value = sample3;
+    if (sample_mcq.value === '0') input_mcq.value = '';
+    if (sample_mcq.value === '1') input_mcq.value = sample1;
+    if (sample_mcq.value === '2') input_mcq.value = sample2;
+    if (sample_mcq.value === '3') input_mcq.value = sample3;
 }
 
 function enterSampleAk()
@@ -868,17 +987,17 @@ function enterSampleAk()
     '10. B\n'+
     '2. B\n';
 
-    if (sample_ak.value == 0) input_ak.value = '';
-    if (sample_ak.value == 1) input_ak.value = sample1;
-    if (sample_ak.value == 2) input_ak.value = sample2;
-    if (sample_ak.value == 3) input_ak.value = sample3;
+    if (sample_ak.value === '0') input_ak.value = '';
+    if (sample_ak.value === '1') input_ak.value = sample1;
+    if (sample_ak.value === '2') input_ak.value = sample2;
+    if (sample_ak.value === '3') input_ak.value = sample3;
 }
 
 function toggle(element, display='block', hide=true)
 {
-    if (element == parsed_mcq) return; //toggle user_guide instead
+    if (element === parsed_mcq) return; //toggle user_guide instead
 
-    if (window.getComputedStyle(element).display == 'none')
+    if (window.getComputedStyle(element).display === 'none')
     {
         element.style.display = display;
     }
@@ -887,13 +1006,13 @@ function toggle(element, display='block', hide=true)
         element.style.display = 'none';
     }
 
-    if (window.getComputedStyle(user_guide).display == 'none')
+    if (window.getComputedStyle(user_guide).display === 'none')
     {
         parsed_mcq.style.display = 'table';
         border_mimic.style.display = 'none';
         user_guide_button.innerHTML = '?';
         setTimeout(() => {
-                if (window.getComputedStyle(user_guide).display == 'none') user_guide_button.classList.add('user_guide_tooltip');
+                if (window.getComputedStyle(user_guide).display === 'none') user_guide_button.classList.add('user_guide_tooltip');
             },
             3000
         );
@@ -909,10 +1028,9 @@ function toggle(element, display='block', hide=true)
 
 function toggleView()
 {
-    const th = parsed_mcq.querySelector('[onclick="toggleView()"]');
-    th.className = (th.className == 'minimal') ? 'expanded' : 'minimal';
+    text_th.className = (text_th.className === 'minimal') ? 'expanded' : 'minimal';
 
-    for (const cell of parsed_mcq.querySelectorAll('.parsed_mcq_cell_div'))
+    for (const cell of parsed_mcq.querySelectorAll('#parsed_mcq .text_div'))
     {
         if (cell.classList.contains('expanded_view'))
         {
