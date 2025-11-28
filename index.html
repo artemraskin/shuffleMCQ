@@ -158,11 +158,15 @@
 
         <div id="output_div" class="step">
             <div class="settings">
-                <img src="gear-solid.svg" alt="settings" class="settings_gear" id="output_settings_gear" onclick="toggle(output_format); toggle(renumber_questions_div);">
+                <img src="gear-solid.svg" alt="settings" class="settings_gear" id="output_settings_gear" onclick="toggle(output_format); toggle(renumber_questions_div); toggle(lock_ak_div);">
                 <div id="renumber_questions_div">
                     <button id="renumber_questions" onclick="renumberQuestions()">Renumber questions</button>
                     starting at <input id="renumber_questions_start" type="number" value="1" onchange="renumberQuestions()">&nbsp;
                     <a href="#ug_shuffle_sections" style="text-decoration:none;"><sup onclick="toggle(user_guide, 'block', false); toggle(ug_note_5, 'block', false)" class="asterisk">*</sup></a><br>
+                </div>
+                <div id="lock_ak_div">
+                    <input type="checkbox" id="lock_ak" onchange="isAkLockable(this.checked)"/>
+                    <label for="lock_ak">Lock answer key when shuffling sections/questions.</label>                    
                 </div>
                 <div id="output_format">
                     <p><b>
