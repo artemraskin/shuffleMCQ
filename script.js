@@ -172,7 +172,7 @@ function parseMcq()
 
         if (row.classList.contains('answer'))
         {
-            keyTd.insertAdjacentHTML('afterbegin','<input type="checkbox" onclick="createOutput(); showGoToStep(3);" name="key'+rowId+'"><br>');
+            keyTd.insertAdjacentHTML('afterbegin','<input type="checkbox" onclick="createOutput(); showGoToStep(3); isAkLockable();" name="key'+rowId+'"><br>');
         }
 
         if (!row.classList.contains('empty_line'))
@@ -712,7 +712,7 @@ function isAkLockable()
     const tableByQuestion = sectionsByQuestion.flat(1);
     const q1Length = tableByQuestion[1].length;
 
-    for (const questionBlock of tableByQuestion.slice(2))
+    for (const questionBlock of tableByQuestion.slice(1))
     {
         if (questionBlock[0].classList.contains('section')) continue;
         if (questionBlock.length !== q1Length)
