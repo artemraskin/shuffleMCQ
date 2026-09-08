@@ -66,7 +66,6 @@
 #output {
     padding: 8px;
     white-space: pre-wrap;
-
 }
 #output_ak {
     font-size: var(--f2);
@@ -98,7 +97,6 @@
     position: absolute;
     right: 8px;
     top: 8px;
-    /*cursor: pointer;*/
 }
 
 .label_div {
@@ -268,7 +266,6 @@ input {
     display: none;
     background-color: white;
     box-shadow: 5px 10px rgb(30, 30, 30);
-    /*cursor: pointer;*/
 }
 
 #middle_div button:active {
@@ -315,25 +312,24 @@ input {
     top: var(--header_height);
     outline: solid black 2px; /*border conflicts with position:sticky and border-collapse:collapse*/
 }
-#parsed_mcq th:nth-child(2),
-#parsed_mcq td:nth-child(2){
+#parsed_mcq .old_td {
     display: none;
 }
-#parsed_mcq th:nth-child(3){
+#parsed_mcq #text_th {
     padding-left: calc(3ch - 2px);
     color: var(--bluelink);
 }
-#parsed_mcq th:nth-child(3):hover{
+#parsed_mcq #text_th:hover {
     font-size: 0;
 }
-#parsed_mcq th:nth-child(3):hover:before {
+#parsed_mcq #text_th:hover:before {
     content: 'switch view';
     text-transform: lowercase;
     font-variant: normal;
     font-size: 10px;
     float: none;
 }
-.minimal:after {
+#parsed_mcq #text_th.minimal:after {
     content: '\00B7\00B7\00B7\00A0'; /* ··· */
     float: right;
     font-size: 10px;
@@ -342,7 +338,7 @@ input {
     transform: translateY(-0.75px);
     scale: 140%;
 }
-.expanded:after {
+#parsed_mcq #text_th.expanded:after {
     content: ':::\00A0';
     float: right;
     font-size: 10px;
@@ -351,33 +347,40 @@ input {
     transform: translateY(-1.25px);
     scale: 140%;
 }
-#parsed_mcq td:nth-child(3)
-{
+#parsed_mcq .text_td {
     white-space: nowrap;
     overflow: clip;
 }
-.parsed_mcq_cell_div {
+#parsed_mcq .text_div {
     max-height: 3em;
 }
-.expanded_view,
-.parsed_mcq_cell_div:active {
+#parsed_mcq .expanded_view,
+#parsed_mcq .text_div:active {
     max-height: none;
     white-space: pre-wrap;
 }
-#parsed_mcq td:nth-child(4),
-#parsed_mcq td:nth-child(5) {
+#parsed_mcq #label_th,
+#parsed_mcq #old_th {
+    width: 45px;
+}
+#parsed_mcq #key_th,
+#parsed_mcq #lock_th {
+    width: 36px;
+}
+#parsed_mcq .key_td,
+#parsed_mcq .lock_td {
     text-align: center;
 }
-.empty_line {
+#parsed_mcq .empty_line {
     background-color: Gray;
 }
-.question {
+#parsed_mcq .question {
     background-color: LightGoldenRodYellow;
 }
-.answer {
+#parsed_mcq .answer {
     background-color: Azure;
 }
-.section {
+#parsed_mcq .section {
     background-color: HoneyDew;
 }
 .error {
@@ -410,7 +413,6 @@ input {
     float: right;
     border: 3px solid #ddd;
     border-radius: 100%;
-    /*cursor: pointer;*/
     font-family: monospace;
 }
 
@@ -433,9 +435,10 @@ input {
     border-bottom: solid var(--main_div_padding) var(--lightgray);
     border-left: solid var(--main_div_padding) var(--lightgray);
     border-right: solid var(--main_div_padding) var(--lightgray);
+    list-style-position: inside;
 }
 
-#border_mimic{
+#border_mimic {
     height: 3px;
     width: calc(100% - var(--main_div_padding)*2);
     background-color: #ddd;
@@ -458,17 +461,16 @@ input {
     margin-top: -1px;
     background-color: rgb(240, 240, 250);
 }
-#vocab *{
+#vocab * {
     margin: 16px 12px 16px 12px;
 }
 #vocab *:hover {
-    /*cursor: pointer;*/
     text-decoration: underline;
 }
 #vocab:focus {
     outline: 0;
 }
-.v_mcq{
+.v_mcq {
     flex: 1;
     vertical-align: bottom;
 }
@@ -490,7 +492,6 @@ input {
 #user_guide h1 span {
     background-color: rgb(255, 255, 140);
     outline: 2px solid rgb(255, 255, 140);
-
 }
 #user_guide h2 {
     padding-left: 15px;
@@ -510,9 +511,6 @@ input {
 #user_guide p {
     padding-left: 25px;
     margin-bottom: 3px;
-}
-#user_guide{
-    list-style-position: inside;
 }
 #toc {
     margin-left: -25px;
@@ -546,7 +544,7 @@ kbd {
     white-space: nowrap;
 }
 
-.highlight{
+.highlight {
     background-color: rgb(190, 190, 190);
     font-family: monospace;
     border-left: 1px solid white;
@@ -604,7 +602,7 @@ kbd {
 
 /* -- Images  --*/
 
-#parsed_mcq_sample{
+#parsed_mcq_sample {
     width: 70%;
     min-width: 220px;
     height: auto;
@@ -706,7 +704,6 @@ button {
     background-color: red;
     z-index: 100;
 }
-
 .lineY {
     position: fixed;
     width: 1px;
@@ -714,20 +711,15 @@ button {
     background-color: red;
     z-index: 100;
 }
-
 #lx1 {
     top: 76px;
 }
-
 #lx2 {
     top: 83.5px;
 }
-
 #lx3 {
     top: 91px;
 }
-
-
 #ly1 {
     right:40px;
 }
