@@ -687,14 +687,16 @@ function splitParsedMcqIntoSectionsIntoQuestions()
     return sectionsByQuestion;
 }
 
-function isAkLockable(isLockAkChecked=true) {
-    if (!isLockAkChecked) return;
+function isAkLockable()
+{
+    if (!lock_ak.checked) return;
     const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
     if (sectionsByQuestion.length === 0) return;
     const tableByQuestion = sectionsByQuestion.flat(1);
     const q1Length = tableByQuestion[1].length;
 
-    for (const questionBlock of tableByQuestion.slice(2)) {
+    for (const questionBlock of tableByQuestion.slice(2))
+    {
         if (questionBlock[0].classList.contains('section')) continue;
         if (questionBlock.length !== q1Length)
         {
@@ -716,8 +718,8 @@ function isAkLockable(isLockAkChecked=true) {
     document.querySelector('label[for="lock_ak"]').style.color = '';
     return true;
 
-
-    function hasExactlyOneCorrectAnswer(questionBlock) {
+    function hasExactlyOneCorrectAnswer(questionBlock)
+    {
         let checkedCount = 0;
         for (const row of questionBlock)
         {
