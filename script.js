@@ -489,6 +489,9 @@ function shuffle(mode)
     //shuffle answer options in the parsed_mcq table within their respective questions
     function shuffleAnswers()
     {
+        let ak;
+        if (lock_ak.checked) ak = rememberLockedAk();
+
         const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions(); //depth = 2
         const tableByQuestion = sectionsByQuestion.flat(1); //[[S],[Q],[Q],[S],[Q]...] [Q]=[row, row, row...]
 
@@ -517,6 +520,7 @@ function shuffle(mode)
         const rows = tableByQuestion.flat(1);
         for (const row of rows) parsed_mcq.append(row);
 
+        if (lock_ak.checked) restoreLockedAk(ak);
         reletterAnswers(); //answer letter labels are out of order because answers were shuffled
         createOutput();
     }
@@ -713,21 +717,21 @@ function isAkLockable()
         if (questionBlock[0].classList.contains('section')) continue;
         if (questionBlock.length !== q1Length)
         {
-            document.querySelector('label[for="lock_ak"]').textContent = 'Unable to lock answer key when shuffling sections/questions, because different questions have a different number of answer options.'
+            document.querySelector('label[for="lock_ak"]').textContent = 'Can\'t keep answer key identical, because different questions have a different number of answer options.'
             document.querySelector('label[for="lock_ak"]').style.color = 'red';
             lock_ak.checked = false;
             return false;
         }
         if (!hasExactlyOneCorrectAnswer(questionBlock))
         {
-            document.querySelector('label[for="lock_ak"]').textContent = 'Unable to lock answer key when shuffling sections/questions, because not every question has exactly one correct answer.'
+            document.querySelector('label[for="lock_ak"]').textContent = 'Can\'t keep answer key identical, because not every question has exactly one correct answer.'
             document.querySelector('label[for="lock_ak"]').style.color = 'red';
             lock_ak.checked = false;
             return false;
         }
     }
     
-    document.querySelector('label[for="lock_ak"]').textContent = 'Lock answer key when shuffling sections/questions.'
+    document.querySelector('label[for="lock_ak"]').textContent = 'Keep answer key identical across all shuffled versions'
     document.querySelector('label[for="lock_ak"]').style.color = '';
     return true;
 
