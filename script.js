@@ -603,6 +603,8 @@ function shuffle(mode)
 
     function restoreLockedAk (ak)
     {
+        if (!ak) return;
+
         const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
         const tableByQuestion = sectionsByQuestion.flat(1);
         let questionBlockIndex = 0;
@@ -610,18 +612,29 @@ function shuffle(mode)
         for (const questionBlock of tableByQuestion)
         {
             if (questionBlock[0].classList.contains('section')) continue;
-            const answerRows = questionBlock.slice(1,-1); // remove question row and emptyline
-            const correctAnswerIndex = ak[questionBlockIndex];
 
-            for (let i = 0; i < answerRows.length; i++)
-            {
-                const row = answerRows[i];
-                const checkbox = row.querySelector("td:nth-child(4) input[type='checkbox']");
-                checkbox.checked = false;
-                if (i==correctAnswerIndex) checkbox.checked = true;
-            }
+            const questionRow = questionBlock[0];
+            const answerRows = questionBlock.slice(1,-1); // remove question row and emptyline
+            const targetIndex = ak[questionBlockIndex];
             questionBlockIndex++;
+
+            if (targetIndex == null || targetIndex < 0) continue; // question had no recorded correct answer
+
+            const checkedRow = answerRows.find(row => row.children[3].firstElementChild.checked);
+            if (!checkedRow || answerRows.indexOf(checkedRow) === targetIndex) continue;
+
+            const reordered = answerRows.filter(row => row !== checkedRow);
+            reordered.splice(targetIndex, 0, checkedRow);
+
+            let previousRow = questionRow;
+            for (const row of reordered)
+            {
+                previousRow.after(row); // relocate each answer row so it follows the previous one
+                previousRow = row;
+            }
         }
+
+        reletterAnswers(); // answer letters are stale wherever rows moved
     }
 }
 
