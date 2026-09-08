@@ -430,7 +430,17 @@ function shuffle(mode)
     function shuffleSections()
     {
         let ak;
-        if (lock_ak.checked) ak = rememberLockedAk();
+        if (lock_ak.checked)
+        {
+            const questionBlocks = splitParsedMcqIntoSectionsIntoQuestions().flatMap(section => section.slice(1));
+            if (questionBlocks.some(qb => qb.length !== questionBlocks[0].length)) //sections differ in option count -> a fixed key can't survive reordering them
+            {
+                document.querySelector('label[for="lock_ak"]').textContent = 'Can\'t shuffle section order while keeping the answer key identical, because sections have a different number of answer options. Shuffle questions and answers instead.'
+                document.querySelector('label[for="lock_ak"]').style.color = 'red';
+                return;
+            }
+            ak = rememberLockedAk();
+        }
 
         const sectionsByRow = splitParsedMcqIntoSections();
 
@@ -709,28 +719,31 @@ function isAkLockable()
     if (!lock_ak.checked) return;
     const sectionsByQuestion = splitParsedMcqIntoSectionsIntoQuestions();
     if (sectionsByQuestion.length === 0) return;
-    const tableByQuestion = sectionsByQuestion.flat(1);
-    const q1Length = tableByQuestion[1].length;
 
-    for (const questionBlock of tableByQuestion.slice(1))
+    for (const section of sectionsByQuestion) //section = [[header,emptyrow], questionBlock, questionBlock...]
     {
-        if (questionBlock[0].classList.contains('section')) continue;
-        if (questionBlock.length !== q1Length)
+        const questionBlocks = section.slice(1);
+        const sectionOptionCount = questionBlocks.length ? questionBlocks[0].length : 0;
+
+        for (const questionBlock of questionBlocks)
         {
-            document.querySelector('label[for="lock_ak"]').textContent = 'Can\'t keep answer key identical, because different questions have a different number of answer options.'
-            document.querySelector('label[for="lock_ak"]').style.color = 'red';
-            lock_ak.checked = false;
-            return false;
-        }
-        if (!hasExactlyOneCorrectAnswer(questionBlock))
-        {
-            document.querySelector('label[for="lock_ak"]').textContent = 'Can\'t keep answer key identical, because not every question has exactly one correct answer.'
-            document.querySelector('label[for="lock_ak"]').style.color = 'red';
-            lock_ak.checked = false;
-            return false;
+            if (questionBlock.length !== sectionOptionCount) //questions within one section must match; sections may differ
+            {
+                document.querySelector('label[for="lock_ak"]').textContent = 'Can\'t keep answer key identical, because questions in the same section have a different number of answer options.'
+                document.querySelector('label[for="lock_ak"]').style.color = 'red';
+                lock_ak.checked = false;
+                return false;
+            }
+            if (!hasExactlyOneCorrectAnswer(questionBlock))
+            {
+                document.querySelector('label[for="lock_ak"]').textContent = 'Can\'t keep answer key identical, because not every question has exactly one correct answer.'
+                document.querySelector('label[for="lock_ak"]').style.color = 'red';
+                lock_ak.checked = false;
+                return false;
+            }
         }
     }
-    
+
     document.querySelector('label[for="lock_ak"]').textContent = 'Keep answer key identical across all shuffled versions'
     document.querySelector('label[for="lock_ak"]').style.color = '';
     return true;
